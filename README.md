@@ -27,8 +27,8 @@ Choose one of the following methods to set up your development environment.
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/NASA-EarthRISE/EarthRISE-tool-Air-Quality-Sampler
-   cd Air_Quality_sampler
+   git clone git@github.com:NASA-EarthRISE/toolkit_Air-Quality-Sampler.git
+   cd toolkit_Air-Quality-Sampler
    ```
 
 2. **Create a virtual environment**:
@@ -55,13 +55,13 @@ Choose one of the following methods to set up your development environment.
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/NASA-EarthRISE/EarthRISE-tool-Air-Quality-Sampler
-   cd Air_Quality_sampler
+   git clone git@github.com:NASA-EarthRISE/toolkit_Air-Quality-Sampler.git
+   cd toolkit_Air-Quality-Sampler
    ```
 
 2. **Create a conda environment**:
    ```bash
-   conda create -n air_quality python=3.10
+   conda create -n air_quality python=3.13
    ```
 
 3. **Activate the environment**:
