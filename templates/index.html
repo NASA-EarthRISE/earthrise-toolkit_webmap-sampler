@@ -1,0 +1,1476 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EarthRISE Air Quality Sampler</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <!-- jQuery UI CSS -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/dark-hive/jquery-ui.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Leaflet Draw -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
+
+    <style>
+        /* ── NASA Design Tokens ── */
+        :root {
+            --nasa-blue:       #0b3d91;
+            --nasa-blue-dark:  #06275e;
+            --nasa-red:        #fc3d21;
+            --nasa-bg:         #080d18;
+            --nasa-panel:      rgba(10, 17, 34, 0.94);
+            --nasa-border:     #1a3e7a;
+            --nasa-text:       #c4d8f5;
+            --nasa-accent:     #4fc3f7;
+            --header-h:        56px;
+            --timeline-h:      90px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+            margin: 0; padding: 0;
+            height: 100%; overflow: hidden;
+            background: var(--nasa-bg);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: var(--nasa-text);
+        }
+
+        /* ── Header ── */
+        #nasa-header {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: var(--header-h);
+            background: linear-gradient(90deg, var(--nasa-blue-dark) 0%, var(--nasa-blue) 100%);
+            border-bottom: 3px solid var(--nasa-red);
+            display: flex; align-items: center; gap: 14px;
+            padding: 0 18px;
+            z-index: 2000;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.6);
+        }
+        .nasa-logo {
+            font-size: 24px; font-weight: 900;
+            color: #fff; letter-spacing: 4px;
+            text-shadow: 0 0 12px rgba(252,61,33,0.5);
+        }
+        .nasa-logo span { color: var(--nasa-red); }
+        .app-title {
+            font-size: 12px; color: #a8c8ff;
+            letter-spacing: 2px; text-transform: uppercase;
+            border-left: 2px solid rgba(255,255,255,0.25);
+            padding-left: 14px; line-height: 1.3;
+        }
+        #header-date-badge {
+            margin-left: auto;
+            background: rgba(0,0,0,0.35);
+            border: 1px solid var(--nasa-border);
+            border-radius: 20px;
+            padding: 3px 14px;
+            font-size: 12px; color: var(--nasa-accent);
+            letter-spacing: 1px; font-weight: 600;
+        }
+
+        /* ── Map ── */
+        #map {
+            position: fixed;
+            top: var(--header-h);
+            bottom: var(--timeline-h);
+            left: 0; right: 0;
+            background: #050a14;
+        }
+
+        /* ── Layer Manager ── */
+        #layer-manager {
+            position: fixed;
+            top: calc(var(--header-h) + 14px);
+            right: 14px;
+            width: 300px;
+            background: var(--nasa-panel);
+            border: 1px solid var(--nasa-border);
+            border-radius: 6px;
+            z-index: 1500;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 6px 32px rgba(0,0,0,0.65);
+        }
+        #lm-header {
+            background: linear-gradient(135deg, #0a2d7a 0%, #1455b5 100%);
+            border-radius: 5px 5px 0 0;
+            padding: 10px 13px;
+            display: flex; align-items: center; gap: 8px;
+            cursor: pointer; user-select: none;
+        }
+        #lm-header .lm-title {
+            flex: 1;
+            font-size: 11px; font-weight: 600;
+            letter-spacing: 1.8px; text-transform: uppercase;
+            color: #e0ecff;
+        }
+        #lm-collapse-btn {
+            background: transparent; border: none;
+            color: rgba(255,255,255,0.65); font-size: 12px;
+            cursor: pointer; padding: 2px 5px; border-radius: 3px;
+            transition: background 0.15s;
+        }
+        #lm-collapse-btn:hover { background: rgba(255,255,255,0.12); }
+        #lm-body { padding: 8px; }
+
+        /* ── Layer Items ── */
+        #layer-list {
+            list-style: none; padding: 0; margin: 0;
+            min-height: 44px;
+        }
+        .layer-item {
+            background: rgba(25, 55, 115, 0.32);
+            border: 1px solid rgba(26, 62, 122, 0.7);
+            border-radius: 5px;
+            padding: 9px 10px;
+            margin: 5px 0;
+            cursor: default;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .layer-item:hover { border-color: var(--nasa-accent); }
+        .layer-item.ui-sortable-placeholder {
+            background: rgba(79, 195, 247, 0.08);
+            border: 1px dashed var(--nasa-accent);
+            visibility: visible !important;
+            border-radius: 5px;
+        }
+        .layer-item.ui-sortable-helper {
+            background: rgba(10, 40, 100, 0.95);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+            border-color: var(--nasa-accent);
+        }
+        .layer-row1 {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 8px;
+        }
+        .drag-handle {
+            color: rgba(160, 200, 255, 0.35);
+            cursor: grab; font-size: 11px; padding: 2px;
+            flex-shrink: 0;
+        }
+        .drag-handle:active { cursor: grabbing; }
+        .layer-swatch {
+            width: 9px; height: 9px; border-radius: 50%;
+            flex-shrink: 0; box-shadow: 0 0 5px rgba(255,255,255,0.3);
+        }
+        .layer-label {
+            flex: 1;
+            font-size: 12px; font-weight: 500;
+            color: var(--nasa-text); line-height: 1.3;
+        }
+        .layer-label small {
+            display: block; font-size: 9px;
+            color: rgba(160, 200, 255, 0.45);
+            letter-spacing: 0.5px; font-weight: 400;
+        }
+        .vis-btn {
+            background: transparent; border: none;
+            color: var(--nasa-accent); font-size: 11px;
+            cursor: pointer; padding: 3px 5px; border-radius: 3px;
+            flex-shrink: 0;
+            transition: background 0.15s, color 0.15s;
+        }
+        .vis-btn:hover { background: rgba(79, 195, 247, 0.15); }
+        .vis-btn.layer-hidden { color: rgba(160, 200, 255, 0.3); }
+        .layer-row2 { display: flex; align-items: center; gap: 8px; }
+        .opacity-icon {
+            font-size: 9px; color: rgba(160, 200, 255, 0.4); flex-shrink: 0;
+        }
+        .opacity-slider {
+            flex: 1; -webkit-appearance: none;
+            height: 3px; border-radius: 2px;
+            background: rgba(26, 62, 122, 0.9);
+            outline: none; cursor: pointer;
+        }
+        .opacity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--nasa-accent);
+            border: 2px solid var(--nasa-bg);
+            cursor: pointer;
+        }
+        .opacity-slider::-moz-range-thumb {
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--nasa-accent);
+            border: 2px solid var(--nasa-bg);
+            cursor: pointer;
+        }
+        .opacity-pct {
+            font-size: 9px; color: rgba(160, 200, 255, 0.45);
+            min-width: 28px; text-align: right; flex-shrink: 0;
+        }
+
+        /* ── Timeline ── */
+        #timeline {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: var(--timeline-h);
+            background: var(--nasa-panel);
+            border-top: 2px solid var(--nasa-border);
+            z-index: 2000;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+            padding: 9px 18px 11px;
+            display: flex; flex-direction: column; gap: 7px;
+        }
+        .tl-row1 {
+            display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;
+        }
+        .tl-btn {
+            background: rgba(10, 45, 122, 0.75);
+            border: 1px solid var(--nasa-border);
+            color: var(--nasa-text);
+            border-radius: 4px; padding: 5px 10px;
+            font-size: 12px; cursor: pointer;
+            white-space: nowrap; flex-shrink: 0;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .tl-btn:hover { background: rgba(252, 61, 33, 0.55); border-color: var(--nasa-red); }
+        #play-btn.playing { background: var(--nasa-red); border-color: #c0301a; }
+        #current-date-display {
+            font-size: 16px; font-weight: 700;
+            color: var(--nasa-accent); letter-spacing: 2px;
+            min-width: 108px; text-align: center; flex-shrink: 0;
+        }
+        #date-picker {
+            background: rgba(10, 17, 34, 0.85);
+            color: var(--nasa-text);
+            border: 1px solid var(--nasa-border);
+            border-radius: 4px; padding: 4px 9px;
+            font-size: 12px; outline: none; flex-shrink: 0;
+        }
+        #date-picker:focus { border-color: var(--nasa-accent); }
+        #speed-select {
+            background: rgba(10, 17, 34, 0.85);
+            color: var(--nasa-text);
+            border: 1px solid var(--nasa-border);
+            border-radius: 4px; padding: 4px 8px;
+            font-size: 11px; outline: none; flex-shrink: 0;
+        }
+        .tl-spacer { flex: 1; }
+        .tl-row2 { display: flex; align-items: center; gap: 8px; }
+        .tl-range-label {
+            font-size: 10px; color: rgba(160, 200, 255, 0.45);
+            white-space: nowrap; flex-shrink: 0;
+        }
+        #timeline-slider {
+            flex: 1; -webkit-appearance: none;
+            height: 5px; border-radius: 3px;
+            background: rgba(26, 62, 122, 0.8);
+            outline: none; cursor: pointer;
+        }
+        #timeline-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: var(--nasa-red);
+            border: 3px solid #e0e8ff;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        #timeline-slider::-moz-range-thumb {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: var(--nasa-red);
+            border: 3px solid #e0e8ff;
+            cursor: pointer;
+        }
+
+        /* ── Loading Badge ── */
+        #loading-badge {
+            position: fixed;
+            top: calc(var(--header-h) + 12px);
+            left: 50%; transform: translateX(-50%);
+            background: rgba(10, 45, 122, 0.92);
+            color: var(--nasa-accent);
+            font-size: 11px; letter-spacing: 1px;
+            padding: 5px 16px; border-radius: 20px;
+            border: 1px solid var(--nasa-border);
+            z-index: 3000; display: none;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+        }
+
+        /* ── Leaflet overrides ── */
+        .leaflet-control-zoom {
+            border: 1px solid var(--nasa-border) !important;
+            background: var(--nasa-panel) !important;
+        }
+        .leaflet-control-zoom a {
+            background: transparent !important;
+            color: var(--nasa-text) !important;
+            border-bottom: 1px solid var(--nasa-border) !important;
+        }
+        .leaflet-control-zoom a:hover {
+            background: rgba(11, 61, 145, 0.5) !important;
+            color: var(--nasa-accent) !important;
+        }
+        .leaflet-control-attribution {
+            background: rgba(8, 13, 24, 0.82) !important;
+            color: rgba(160, 200, 255, 0.55) !important;
+            font-size: 10px !important;
+        }
+        .leaflet-control-attribution a { color: var(--nasa-accent) !important; }
+
+        /* ── Responsive tweaks ── */
+        @media (max-width: 768px) {
+            #layer-manager { width: 260px; right: 8px; }
+            .app-title { display: none; }
+            .tl-btn .btn-label { display: none; }
+        }
+
+        /* ── Leaflet Draw Toolbar – NASA Theme ── */
+        .leaflet-draw-toolbar a,
+        .leaflet-draw-toolbar a:hover {
+            background-color: var(--nasa-panel) !important;
+            border-color: var(--nasa-border) !important;
+        }
+        .leaflet-draw-toolbar a:hover {
+            background-color: rgba(11, 61, 145, 0.65) !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-draw-polygon,
+        .leaflet-draw-toolbar .leaflet-draw-draw-rectangle {
+            /* keep sprite icons, just override bg */
+        }
+        .leaflet-draw-section { border-color: var(--nasa-border) !important; }
+        .leaflet-draw-actions a {
+            background: var(--nasa-blue) !important;
+            color: #fff !important;
+            border-right-color: rgba(255,255,255,0.2) !important;
+        }
+        .leaflet-draw-actions a:hover {
+            background: var(--nasa-red) !important;
+        }
+        .leaflet-draw-tooltip {
+            background: rgba(10, 17, 34, 0.92) !important;
+            border: 1px solid var(--nasa-border) !important;
+            color: var(--nasa-accent) !important;
+            font-size: 11px !important;
+            padding: 4px 10px !important;
+        }
+        .leaflet-draw-tooltip-single,
+        .leaflet-draw-tooltip-subtext {
+            color: var(--nasa-text) !important;
+        }
+        /* drawn shape style */
+        .drawn-aoi-shape { /* applied via Leaflet options */ }
+
+        /* ── ClimateSERV Modal ── */
+        #climateModal .modal-content {
+            background: #0a1122;
+            border: 1px solid var(--nasa-border);
+            border-radius: 8px;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.8);
+        }
+        #climateModal .modal-header {
+            background: linear-gradient(135deg, #06275e 0%, #0b3d91 100%);
+            border-bottom: 2px solid var(--nasa-red);
+            border-radius: 7px 7px 0 0;
+            padding: 14px 20px;
+        }
+        #climateModal .modal-title {
+            font-size: 13px; font-weight: 600;
+            letter-spacing: 1.8px; text-transform: uppercase;
+            color: #e0ecff;
+        }
+        #climateModal .btn-close {
+            filter: invert(1) brightness(0.7);
+        }
+        #climateModal .modal-body {
+            padding: 20px;
+            background: #0a1122;
+            border-radius: 0 0 7px 7px;
+        }
+        /* progress section */
+        #cs-progress-section { text-align: center; padding: 20px 0 10px; }
+        #cs-spinner-wrap {
+            font-size: 36px; color: var(--nasa-accent);
+            margin-bottom: 16px;
+        }
+        #cs-status-text {
+            font-size: 12px; color: var(--nasa-text);
+            letter-spacing: 0.8px; margin-bottom: 14px;
+        }
+        #cs-request-id {
+            font-size: 10px; color: rgba(160,200,255,0.4);
+            word-break: break-all; margin-bottom: 12px;
+        }
+        .cs-progress-wrap {
+            background: rgba(26,62,122,0.4);
+            border-radius: 4px; height: 8px;
+            overflow: hidden; margin: 0 auto;
+            max-width: 480px;
+        }
+        #cs-progress-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--nasa-blue), var(--nasa-accent));
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+        #cs-progress-pct {
+            font-size: 11px; color: var(--nasa-accent);
+            margin-top: 6px; letter-spacing: 1px;
+        }
+        /* error state */
+        #cs-error-section { display: none; text-align: center; padding: 20px 0; }
+        .cs-error-icon { font-size: 32px; color: var(--nasa-red); margin-bottom: 10px; }
+        .cs-error-msg { font-size: 12px; color: #ffa0a0; }
+        /* chart section */
+        #cs-chart-section { display: none; }
+        .cs-meta-bar {
+            display: flex; flex-wrap: wrap; gap: 10px;
+            margin-bottom: 14px;
+        }
+        .cs-meta-pill {
+            background: rgba(26,62,122,0.5);
+            border: 1px solid var(--nasa-border);
+            border-radius: 20px; padding: 3px 12px;
+            font-size: 10px; color: var(--nasa-text);
+            letter-spacing: 0.5px;
+        }
+        .cs-meta-pill span { color: var(--nasa-accent); font-weight: 600; }
+        .cs-stats-row {
+            display: flex; gap: 8px; margin-bottom: 16px;
+        }
+        .cs-stat-card {
+            flex: 1;
+            background: rgba(11,61,145,0.25);
+            border: 1px solid var(--nasa-border);
+            border-radius: 5px; padding: 8px 12px;
+            text-align: center;
+        }
+        .cs-stat-card .cs-stat-label {
+            font-size: 9px; letter-spacing: 1.2px;
+            text-transform: uppercase; color: rgba(160,200,255,0.5);
+            margin-bottom: 4px;
+        }
+        .cs-stat-card .cs-stat-value {
+            font-size: 18px; font-weight: 700; color: var(--nasa-accent);
+        }
+        #cs-chart-canvas-wrap {
+            position: relative; height: 320px;
+        }
+
+        /* ── Basemap Selector ── */
+        .lm-divider {
+            border: none;
+            border-top: 1px solid rgba(26, 62, 122, 0.7);
+            margin: 8px 0 6px;
+        }
+        .lm-section-title {
+            font-size: 9px; font-weight: 600;
+            letter-spacing: 1.8px; text-transform: uppercase;
+            color: rgba(160, 200, 255, 0.45);
+            padding: 0 2px 4px;
+        }
+        .basemap-btn {
+            width: 100%;
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(25, 55, 115, 0.2);
+            border: 1px solid rgba(26, 62, 122, 0.5);
+            border-radius: 4px;
+            padding: 7px 9px; margin: 4px 0;
+            cursor: pointer; text-align: left;
+            color: var(--nasa-text);
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .basemap-btn:hover {
+            background: rgba(25, 55, 115, 0.5);
+            border-color: var(--nasa-accent);
+        }
+        .basemap-btn.active {
+            background: rgba(11, 61, 145, 0.45);
+            border-color: var(--nasa-accent);
+        }
+        .basemap-btn .bm-icon {
+            font-size: 13px; color: var(--nasa-accent);
+            width: 16px; text-align: center; flex-shrink: 0;
+        }
+        .basemap-btn.active .bm-icon { color: #fff; }
+        .basemap-btn .bm-text { flex: 1; }
+        .basemap-btn .bm-label {
+            font-size: 11px; font-weight: 500;
+            color: var(--nasa-text); display: block;
+        }
+        .basemap-btn .bm-sub {
+            font-size: 9px; color: rgba(160, 200, 255, 0.45);
+        }
+        .basemap-btn .bm-check {
+            font-size: 10px; color: var(--nasa-accent);
+            opacity: 0;
+        }
+        .basemap-btn.active .bm-check { opacity: 1; }
+        .basemap-badge-live {
+            font-size: 8px; background: var(--nasa-red);
+            color: #fff; border-radius: 3px; padding: 1px 4px;
+            letter-spacing: 0.5px; margin-left: 4px; vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header id="nasa-header">
+    <div class="nasa-logo">Earth<span>RISE</span></div>
+    <div class="app-title">Air Quality Sampler &mdash; Earth Observing System</div>
+    <div id="header-date-badge">2024-08-21</div>
+</header>
+
+<!-- ── Map ── -->
+<div id="map"></div>
+
+<!-- ── Loading Badge ── -->
+<div id="loading-badge">
+    <i class="fas fa-circle-notch fa-spin me-1"></i> Loading tiles&hellip;
+</div>
+
+<!-- ── ClimateSERV Modal ── -->
+<div class="modal fade" id="climateModal" tabindex="-1" aria-labelledby="climateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="climateModalLabel">
+                    <i class="fas fa-chart-line me-2" style="color:var(--nasa-accent)"></i>
+                    ClimateSERV Data Analysis
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- ── Progress State ── -->
+                <div id="cs-progress-section">
+                    <div id="cs-spinner-wrap">
+                        <i class="fas fa-satellite fa-spin"></i>
+                    </div>
+                    <div id="cs-status-text">Initializing request&hellip;</div>
+                    <div id="cs-request-id"></div>
+                    <div class="cs-progress-wrap">
+                        <div id="cs-progress-bar"></div>
+                    </div>
+                    <div id="cs-progress-pct">0%</div>
+                </div>
+
+                <!-- ── Error State ── -->
+                <div id="cs-error-section">
+                    <div class="cs-error-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                    <div class="cs-error-msg" id="cs-error-msg">An error occurred.</div>
+                    <button class="tl-btn mt-3" onclick="csRetry()">
+                        <i class="fas fa-rotate-right me-1"></i> Retry
+                    </button>
+                </div>
+
+                <!-- ── Chart State ── -->
+                <div id="cs-chart-section">
+                    <div class="cs-meta-bar" id="cs-meta-bar"></div>
+                    <div class="cs-stats-row" id="cs-stats-row"></div>
+                    <div id="cs-chart-canvas-wrap">
+                        <canvas id="cs-chart-canvas"></canvas>
+                    </div>
+                </div>
+
+            </div><!-- /modal-body -->
+        </div>
+    </div>
+</div>
+
+<!-- ── Layer Manager ── -->
+<div id="layer-manager">
+    <div id="lm-header" onclick="toggleLayerManager()">
+        <span class="lm-title"><i class="fas fa-layer-group me-2"></i>Layer Manager</span>
+        <button id="lm-collapse-btn" title="Toggle panel">
+            <i class="fas fa-minus"></i>
+        </button>
+    </div>
+    <div id="lm-body">
+        <ul id="layer-list"></ul>
+
+        <hr class="lm-divider">
+        <div class="lm-section-title"><i class="fas fa-map me-1"></i>Basemap</div>
+        <div id="basemap-list">
+            <!-- populated by buildBasemapUI() -->
+        </div>
+    </div>
+</div>
+
+<!-- ── Timeline ── -->
+<div id="timeline">
+    <div class="tl-row1">
+        <button class="tl-btn" onclick="stepDate(-365)" title="Back 1 year">
+            <i class="fas fa-backward-fast"></i>
+        </button>
+        <button class="tl-btn" onclick="stepDate(-30)" title="Back 1 month">
+            <i class="fas fa-backward-step"></i>
+        </button>
+        <button class="tl-btn" onclick="stepDate(-1)" title="Back 1 day">
+            <i class="fas fa-backward"></i>
+        </button>
+        <button class="tl-btn" id="play-btn" onclick="togglePlay()" title="Play / Pause">
+            <i class="fas fa-play"></i>
+        </button>
+        <button class="tl-btn" onclick="stepDate(1)" title="Forward 1 day">
+            <i class="fas fa-forward"></i>
+        </button>
+        <button class="tl-btn" onclick="stepDate(30)" title="Forward 1 month">
+            <i class="fas fa-forward-step"></i>
+        </button>
+        <button class="tl-btn" onclick="stepDate(365)" title="Forward 1 year">
+            <i class="fas fa-forward-fast"></i>
+        </button>
+
+        <div id="current-date-display">2024-08-21</div>
+        <input type="date" id="date-picker" value="2024-08-21"
+               min="2015-01-01" max="2024-12-31">
+        <div class="tl-spacer"></div>
+        <label style="font-size:10px; color:rgba(160,200,255,0.45); white-space:nowrap; flex-shrink:0;">
+            SPEED
+        </label>
+        <select id="speed-select">
+            <option value="2000">0.5×</option>
+            <option value="1000" selected>1×</option>
+            <option value="500">2×</option>
+            <option value="250">4×</option>
+        </select>
+    </div>
+    <div class="tl-row2">
+        <span class="tl-range-label">Jan 2015</span>
+        <input type="range" id="timeline-slider" min="0" max="3650" value="3519">
+        <span class="tl-range-label">Dec 2024</span>
+    </div>
+</div>
+
+<!-- ── Scripts ── -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   Configuration
+═══════════════════════════════════════════════════════════ */
+const RANGE_START  = new Date('2015-01-01T00:00:00Z');
+const RANGE_END    = new Date('2024-12-31T00:00:00Z');
+const TOTAL_DAYS   = Math.round((RANGE_END - RANGE_START) / 86400000);
+let   currentDate  = new Date('2024-08-21T00:00:00Z');
+
+// Layer definitions – order = visual stack order (index 0 = topmost)
+const LAYER_DEFS = [
+    {
+        id:       'co500',
+        gibs:     'AIRS_L2_Carbon_Monoxide_500hPa_Volume_Mixing_Ratio_Day',
+        label:    'CO 500 hPa',
+        sublabel: 'AIRS L2 Carbon Monoxide · Daily',
+        color:    '#ff7043',
+        opacity:  0.85,
+        visible:  true,
+    },
+    {
+        id:       'aerosol',
+        gibs:     'OMI_Aerosol_Index',
+        label:    'Aerosol Index',
+        sublabel: 'OMI Aerosol Index · Daily',
+        color:    '#4fc3f7',
+        opacity:  0.85,
+        visible:  true,
+    },
+];
+
+
+/* ═══════════════════════════════════════════════════════════
+   Helpers
+═══════════════════════════════════════════════════════════ */
+function toWMTSTime(date) {
+    const y = date.getUTCFullYear();
+    const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(date.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${d}T00:00:00Z`;
+}
+
+function toDisplayDate(date) {
+    const y = date.getUTCFullYear();
+    const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(date.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+function clampDate(date) {
+    if (date < RANGE_START) return new Date(RANGE_START);
+    if (date > RANGE_END)   return new Date(RANGE_END);
+    return date;
+}
+
+function dateToSlider(date) {
+    return Math.round((date - RANGE_START) / 86400000);
+}
+
+function sliderToDate(val) {
+    return new Date(RANGE_START.getTime() + val * 86400000);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   Timed WMTS Tile Layer (extends L.TileLayer)
+═══════════════════════════════════════════════════════════ */
+const TimedWMTS = L.TileLayer.extend({
+
+    initialize(def, time, options) {
+        this._def = def;
+        const url = TimedWMTS.makeUrl(def.gibs, time);
+        L.TileLayer.prototype.initialize.call(this, url, options);
+    },
+
+    setTime(time) {
+        this.setUrl(TimedWMTS.makeUrl(this._def.gibs, time), /* noRedraw= */ false);
+    },
+});
+
+TimedWMTS.makeUrl = function(layer, time) {
+    return (
+        'https://gibs-{s}.earthdata.nasa.gov/wmts/epsg4326/best/wmts.cgi' +
+        `?TIME=${time}` +
+        `&layer=${layer}` +
+        '&style=default' +
+        '&tilematrixset=2km' +
+        '&Service=WMTS&Request=GetTile&Version=1.0.0' +
+        '&Format=image%2Fpng' +
+        '&TileMatrix={z}&TileCol={x}&TileRow={y}'
+    );
+};
+
+
+/* ═══════════════════════════════════════════════════════════
+   Map Initialisation
+═══════════════════════════════════════════════════════════ */
+const map = L.map('map', {
+    crs:        L.CRS.EPSG4326,
+    center:     [20, 0],
+    zoom:       2,
+    minZoom:    1,
+    maxZoom:    16,
+    maxBounds:  [[-90, -220], [90, 220]],
+    zoomControl: false,
+});
+
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+/* ═══════════════════════════════════════════════════════════
+   Basemap System
+═══════════════════════════════════════════════════════════ */
+let currentBasemap   = null;
+let currentBasemapId = 'bluemarble';
+
+const BASEMAP_DEFS = [
+    {
+        id:      'bluemarble',
+        label:   'Blue Marble',
+        sub:     'NASA GIBS · Static global',
+        icon:    'fa-earth-americas',
+        live:    false,
+        create() {
+            return L.tileLayer(
+                'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/wmts.cgi' +
+                '?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0' +
+                '&LAYER=BlueMarble_ShadedRelief_Bathymetry' +
+                '&STYLE=default&TILEMATRIXSET=500m' +
+                '&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}' +
+                '&FORMAT=image/jpeg',
+                {
+                    tileSize:       512,
+                    maxNativeZoom:  9,
+                    noWrap:         true,
+                    bounds:         [[-90, -180], [90, 180]],
+                    attribution:    '&copy; <a href="https://earthdata.nasa.gov" target="_blank">NASA EOSDIS GIBS</a>',
+                }
+            );
+        },
+    },
+    {
+        id:      'osm',
+        label:   'OpenStreetMap',
+        sub:     'Street map · Zoom to 16',
+        icon:    'fa-map',
+        live:    false,
+        create() {
+            return L.tileLayer.wms('https://ows.terrestris.de/osm/service', {
+                layers:      'OSM-WMS',
+                format:      'image/png',
+                version:     '1.1.1',
+                maxZoom:     16,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+            });
+        },
+    },
+    {
+        id:      'modis',
+        label:   'MODIS True Color',
+        sub:     'MODIS Terra · 250 m',
+        icon:    'fa-satellite',
+        live:    true,   // updates with timeline date
+        create() {
+            return new TimedWMTS(
+                { gibs: 'MODIS_Terra_CorrectedReflectance_TrueColor' },
+                toWMTSTime(currentDate),
+                {
+                    subdomains:     ['a', 'b', 'c'],
+                    tileSize:       512,
+                    maxNativeZoom:  9,
+                    noWrap:         true,
+                    bounds:         [[-90, -180], [90, 180]],
+                    attribution:    '&copy; <a href="https://earthdata.nasa.gov" target="_blank">NASA EOSDIS GIBS</a>',
+                }
+            );
+        },
+    },
+];
+
+function selectBasemap(id) {
+    if (id === currentBasemapId && currentBasemap) return;
+
+    // Remove old basemap
+    if (currentBasemap) {
+        map.removeLayer(currentBasemap);
+        currentBasemap = null;
+    }
+
+    const def = BASEMAP_DEFS.find(b => b.id === id);
+    if (!def) return;
+
+    currentBasemap   = def.create();
+    currentBasemapId = id;
+    currentBasemap.addTo(map);
+    currentBasemap.bringToBack();
+
+    // Keep data layers on top
+    enforceZOrder();
+    buildBasemapUI();
+}
+
+function buildBasemapUI() {
+    const $wrap = $('#basemap-list').empty();
+    BASEMAP_DEFS.forEach(def => {
+        const isActive = def.id === currentBasemapId;
+        const liveBadge = def.live
+            ? '<span class="basemap-badge-live">LIVE</span>'
+            : '';
+        const $btn = $(`
+            <button class="basemap-btn ${isActive ? 'active' : ''}" data-id="${def.id}">
+                <i class="fas ${def.icon} bm-icon"></i>
+                <span class="bm-text">
+                    <span class="bm-label">${def.label}${liveBadge}</span>
+                    <span class="bm-sub">${def.sub}</span>
+                </span>
+                <i class="fas fa-check bm-check"></i>
+            </button>
+        `);
+        $wrap.append($btn);
+    });
+
+    $wrap.off('click.bm').on('click.bm', '.basemap-btn', function () {
+        selectBasemap($(this).data('id'));
+    });
+}
+
+// selectBasemap() is called in the Boot section below,
+// after leafletLayers is initialised.
+
+
+/* ═══════════════════════════════════════════════════════════
+   Data Layers
+═══════════════════════════════════════════════════════════ */
+const leafletLayers = {};  // id → TimedWMTS instance
+
+function initDataLayers() {
+    const time = toWMTSTime(currentDate);
+    LAYER_DEFS.forEach(def => {
+        const lyr = new TimedWMTS(def, time, {
+            subdomains:     ['a', 'b', 'c'],
+            tileSize:       512,
+            opacity:        def.opacity,
+            noWrap:         true,
+            bounds:         [[-90, -180], [90, 180]],
+            maxNativeZoom:  9,
+            attribution:    '&copy; <a href="https://earthdata.nasa.gov" target="_blank">NASA EOSDIS GIBS</a>',
+        });
+        if (def.visible) lyr.addTo(map);
+        leafletLayers[def.id] = lyr;
+    });
+    enforceZOrder();
+}
+
+// Bring layers to front in reverse LAYER_DEFS order (index 0 is topmost)
+function enforceZOrder() {
+    [...LAYER_DEFS].reverse().forEach(def => {
+        const lyr = leafletLayers[def.id];
+        if (lyr && def.visible) lyr.bringToFront();
+    });
+}
+
+function refreshAllTimes() {
+    const time = toWMTSTime(currentDate);
+    LAYER_DEFS.forEach(def => {
+        if (leafletLayers[def.id]) {
+            leafletLayers[def.id].setTime(time);
+        }
+    });
+    // Keep MODIS basemap in sync with the timeline
+    if (currentBasemapId === 'modis' && currentBasemap && currentBasemap.setTime) {
+        currentBasemap.setTime(time);
+    }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   Layer Manager UI
+═══════════════════════════════════════════════════════════ */
+function buildLayerUI() {
+    const $list = $('#layer-list').empty();
+
+    LAYER_DEFS.forEach(def => {
+        const pct      = Math.round(def.opacity * 100);
+        const eyeIcon  = def.visible ? 'fa-eye' : 'fa-eye-slash';
+        const hiddenCls = def.visible ? '' : 'layer-hidden';
+
+        const $li = $(`
+            <li class="layer-item" data-id="${def.id}">
+                <div class="layer-row1">
+                    <span class="drag-handle" title="Drag to reorder">
+                        <i class="fas fa-grip-vertical"></i>
+                    </span>
+                    <span class="layer-swatch" style="background:${def.color};"></span>
+                    <span class="layer-label">
+                        ${def.label}
+                        <small>${def.sublabel}</small>
+                    </span>
+                    <button class="vis-btn ${hiddenCls}" title="Toggle visibility"
+                            data-id="${def.id}">
+                        <i class="fas ${eyeIcon}"></i>
+                    </button>
+                </div>
+                <div class="layer-row2">
+                    <i class="fas fa-circle-half-stroke opacity-icon"></i>
+                    <input type="range" class="opacity-slider"
+                           min="0" max="100" value="${pct}"
+                           data-id="${def.id}">
+                    <span class="opacity-pct" id="pct-${def.id}">${pct}%</span>
+                </div>
+            </li>
+        `);
+        $list.append($li);
+    });
+
+    // Delegated event – visibility toggle
+    $list.off('click.vis').on('click.vis', '.vis-btn', function (e) {
+        e.stopPropagation();
+        toggleVisibility($(this).data('id'));
+    });
+
+    // Delegated event – opacity slider
+    $list.off('input.opacity').on('input.opacity', '.opacity-slider', function () {
+        setOpacity($(this).data('id'), +this.value);
+    });
+
+    // jQuery UI Sortable
+    if ($list.hasClass('ui-sortable')) $list.sortable('destroy');
+    $list.sortable({
+        handle:      '.drag-handle',
+        axis:        'y',
+        placeholder: 'layer-item ui-sortable-placeholder',
+        update()     { syncLayerOrder(); },
+    });
+}
+
+function toggleLayerManager() {
+    const $body = $('#lm-body');
+    const $icon = $('#lm-collapse-btn i');
+    if ($body.is(':visible')) {
+        $body.slideUp(200);
+        $icon.removeClass('fa-minus').addClass('fa-plus');
+    } else {
+        $body.slideDown(200);
+        $icon.removeClass('fa-plus').addClass('fa-minus');
+    }
+}
+
+function toggleVisibility(id) {
+    const def = LAYER_DEFS.find(d => d.id === id);
+    if (!def) return;
+    def.visible = !def.visible;
+    const lyr = leafletLayers[id];
+    if (def.visible) {
+        lyr.addTo(map);
+        enforceZOrder();
+    } else {
+        lyr.remove();
+    }
+    buildLayerUI();
+}
+
+function setOpacity(id, pct) {
+    const def = LAYER_DEFS.find(d => d.id === id);
+    if (!def) return;
+    def.opacity = pct / 100;
+    if (leafletLayers[id]) leafletLayers[id].setOpacity(def.opacity);
+    $(`#pct-${id}`).text(`${pct}%`);
+}
+
+function syncLayerOrder() {
+    const ordered = [];
+    $('#layer-list .layer-item').each(function () {
+        const id  = $(this).data('id');
+        const def = LAYER_DEFS.find(d => d.id === id);
+        if (def) ordered.push(def);
+    });
+    LAYER_DEFS.length = 0;
+    ordered.forEach(d => LAYER_DEFS.push(d));
+    enforceZOrder();
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   Timeline & Date Controls
+═══════════════════════════════════════════════════════════ */
+function applyDate(date) {
+    currentDate = clampDate(date);
+    const disp  = toDisplayDate(currentDate);
+
+    $('#current-date-display').text(disp);
+    $('#header-date-badge').text(disp);
+    $('#date-picker').val(disp);
+    $('#timeline-slider').val(dateToSlider(currentDate));
+
+    refreshAllTimes();
+}
+
+function stepDate(days) {
+    const d = new Date(currentDate);
+    d.setUTCDate(d.getUTCDate() + days);
+    applyDate(d);
+}
+
+// Slider – update display on every tick, refresh tiles only on release
+$('#timeline-slider').on('input', function () {
+    const d    = sliderToDate(+this.value);
+    const disp = toDisplayDate(d);
+    currentDate = clampDate(d);
+    $('#current-date-display').text(disp);
+    $('#header-date-badge').text(disp);
+    $('#date-picker').val(disp);
+});
+$('#timeline-slider').on('change', function () {
+    refreshAllTimes();
+});
+
+// Date picker
+$('#date-picker').on('change', function () {
+    if (!this.value) return;
+    const [y, mo, d] = this.value.split('-').map(Number);
+    applyDate(new Date(Date.UTC(y, mo - 1, d)));
+});
+
+// Speed selector restarts play if active
+$('#speed-select').on('change', function () {
+    if (playing) { stopPlay(); startPlay(); }
+});
+
+
+/* ═══════════════════════════════════════════════════════════
+   Play / Pause Animation
+═══════════════════════════════════════════════════════════ */
+let playing   = false;
+let playTimer = null;
+
+function togglePlay() {
+    playing = !playing;
+    const $btn = $('#play-btn');
+    if (playing) {
+        $btn.html('<i class="fas fa-pause"></i>').addClass('playing');
+        startPlay();
+    } else {
+        $btn.html('<i class="fas fa-play"></i>').removeClass('playing');
+        stopPlay();
+    }
+}
+
+function startPlay() {
+    const speed = +$('#speed-select').val();
+    playTimer = setInterval(() => {
+        const d = new Date(currentDate);
+        d.setUTCDate(d.getUTCDate() + 1);
+        applyDate(d > RANGE_END ? new Date(RANGE_START) : d);
+    }, speed);
+}
+
+function stopPlay() {
+    clearInterval(playTimer);
+    playTimer = null;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   Tile Loading Indicator
+═══════════════════════════════════════════════════════════ */
+let loadCount = 0;
+
+map.on('tileloadstart', () => {
+    loadCount++;
+    if (loadCount === 1) $('#loading-badge').fadeIn(150);
+});
+map.on('tileload tileerror', () => {
+    loadCount = Math.max(0, loadCount - 1);
+    if (loadCount === 0) $('#loading-badge').fadeOut(400);
+});
+
+
+/* ═══════════════════════════════════════════════════════════
+   Drawing Tools (Leaflet.draw)
+═══════════════════════════════════════════════════════════ */
+const drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
+
+const drawControl = new L.Control.Draw({
+    position: 'topleft',
+    draw: {
+        polygon: {
+            allowIntersection: false,
+            showArea: true,
+            shapeOptions: {
+                color:        '#4fc3f7',
+                weight:       2,
+                fillColor:    '#4fc3f7',
+                fillOpacity:  0.12,
+                dashArray:    '4 4',
+            },
+        },
+        rectangle: {
+            shapeOptions: {
+                color:       '#4fc3f7',
+                weight:      2,
+                fillColor:   '#4fc3f7',
+                fillOpacity: 0.12,
+                dashArray:   '4 4',
+            },
+        },
+        circle:       false,
+        polyline:     false,
+        marker:       false,
+        circlemarker: false,
+    },
+    edit: {
+        featureGroup: drawnItems,
+        remove:       true,
+    },
+});
+map.addControl(drawControl);
+
+// Track the last geometry for retry
+let lastGeometry = null;
+
+// When a shape is completed, clear previous, store geometry, trigger API
+map.on(L.Draw.Event.CREATED, function (e) {
+    drawnItems.clearLayers();
+    drawnItems.addLayer(e.layer);
+
+    const geojson  = e.layer.toGeoJSON();
+    lastGeometry   = geojson.geometry;
+
+    openClimateModal(lastGeometry);
+});
+
+
+/* ═══════════════════════════════════════════════════════════
+   ClimateSERV API  –  Submit → Poll → Fetch
+═══════════════════════════════════════════════════════════ */
+const CS_BASE = 'https://climateserv.servirglobal.net/api';
+
+// Fixed request parameters (swap geometry only)
+const CS_PARAMS = {
+    datatype:              0,
+    ensemble:              false,
+    ensemble_data_source:  '',
+    begintime:             '01/01/2020',
+    endtime:               '02/28/2020',
+    intervaltype:          0,
+    operationtype:         5,
+    dateType_Category:     'default',
+    isZip_CurrentDataType: false,
+    is_from_ui:            true,
+};
+
+let csModal        = null;  // Bootstrap modal instance
+let csActiveId     = null;  // current job ID
+let csAborted      = false; // flag to stop polling on modal close
+
+function openClimateModal(geometry) {
+    csAborted = false;
+
+    // Reset UI
+    $('#cs-progress-section').show();
+    $('#cs-error-section').hide();
+    $('#cs-chart-section').hide();
+    $('#cs-progress-bar').css('width', '0%');
+    $('#cs-progress-pct').text('0%');
+    $('#cs-status-text').text('Submitting data request\u2026');
+    $('#cs-request-id').text('');
+
+    if (!csModal) {
+        csModal = new bootstrap.Modal(document.getElementById('climateModal'));
+        // Stop polling if the modal is dismissed
+        document.getElementById('climateModal').addEventListener('hidden.bs.modal', () => {
+            csAborted = true;
+        });
+    }
+    csModal.show();
+
+    csSubmitRequest(geometry);
+}
+
+function csRetry() {
+    if (lastGeometry) openClimateModal(lastGeometry);
+}
+
+// ── 1. Submit ──────────────────────────────────────────────
+function csSubmitRequest(geometry) {
+    $.ajax({
+        url:      `${CS_BASE}/submitDataRequest/`,
+        method:   'GET',
+        dataType: 'json',
+        data:     Object.assign({}, CS_PARAMS, { geometry: JSON.stringify(geometry) }),
+    })
+    .done(function (response) {
+        if (csAborted) return;
+        const id = Array.isArray(response) ? response[0] : response;
+        csActiveId = id;
+        $('#cs-status-text').text('Request queued. Awaiting processing\u2026');
+        $('#cs-request-id').text(`ID: ${id}`);
+        csPollProgress(id);
+    })
+    .fail(function (xhr) {
+        csShowError('Submit failed: ' + (xhr.responseText || xhr.statusText || 'Network error'));
+    });
+}
+
+// ── 2. Poll progress ───────────────────────────────────────
+function csPollProgress(id) {
+    if (csAborted) return;
+
+    $.ajax({
+        url:      `${CS_BASE}/getDataRequestProgress/`,
+        method:   'GET',
+        dataType: 'json',
+        data:     { id },
+    })
+    .done(function (response) {
+        if (csAborted) return;
+
+        const raw      = Array.isArray(response) ? response[0] : response;
+        const progress = parseFloat(raw);
+
+        if (isNaN(progress) || progress < 0) {
+            csShowError('Processing failed on server (progress returned ' + raw + ').');
+            return;
+        }
+
+        const pct = Math.min(100, Math.round(progress));
+        $('#cs-progress-bar').css('width', pct + '%');
+        $('#cs-progress-pct').text(pct + '%');
+        $('#cs-status-text').text('Processing: ' + pct + '% complete\u2026');
+
+        if (progress >= 100) {
+            $('#cs-status-text').text('Fetching data\u2026');
+            csFetchData(id);
+        } else {
+            setTimeout(() => csPollProgress(id), 2000);
+        }
+    })
+    .fail(function (xhr) {
+        if (csAborted) return;
+        // Retry a few network hiccups silently
+        setTimeout(() => csPollProgress(id), 3000);
+    });
+}
+
+// ── 3. Fetch final data ────────────────────────────────────
+function csFetchData(id) {
+    $.ajax({
+        url:      `${CS_BASE}/getDataFromRequest/`,
+        method:   'GET',
+        dataType: 'json',
+        data:     { id },
+    })
+    .done(function (resultData) {
+        if (csAborted) return;
+        csProcessAndChart(resultData);
+    })
+    .fail(function (xhr) {
+        csShowError('Data fetch failed: ' + (xhr.responseText || xhr.statusText || 'Network error'));
+    });
+}
+
+// ── Error display ──────────────────────────────────────────
+function csShowError(msg) {
+    $('#cs-progress-section').hide();
+    $('#cs-chart-section').hide();
+    $('#cs-error-section').show();
+    $('#cs-error-msg').text(msg);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   Data Processing & Chart.js Rendering
+═══════════════════════════════════════════════════════════ */
+let csChartInstance = null;
+
+function csProcessAndChart(resultData) {
+    const timeSeriesArray = resultData.data;
+    const noDataValue     = -9999;
+
+    if (!timeSeriesArray || timeSeriesArray.length === 0) {
+        csShowError('No data returned for the selected area and date range.');
+        return;
+    }
+
+    const values = timeSeriesArray.map(item => {
+        const val = parseFloat(item.value.avg);
+        return val === noDataValue ? null : val;
+    });
+
+    const dates = timeSeriesArray.map(item => {
+        const [m, d, y] = item.date.split('/');
+        return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    });
+
+    // ── Stats ──────────────────────────────────────────────
+    const valid   = values.filter(v => v !== null);
+    const vMin    = valid.length ? Math.min(...valid) : null;
+    const vMax    = valid.length ? Math.max(...valid) : null;
+    const vMean   = valid.length ? (valid.reduce((s, v) => s + v, 0) / valid.length) : null;
+    const fmt     = v => v !== null ? v.toFixed(4) : 'N/A';
+
+    // ── Meta pills ─────────────────────────────────────────
+    $('#cs-meta-bar').html(`
+        <span class="cs-meta-pill">Period: <span>${CS_PARAMS.begintime} – ${CS_PARAMS.endtime}</span></span>
+        <span class="cs-meta-pill">Data points: <span>${valid.length}</span></span>
+        <span class="cs-meta-pill">Request ID: <span style="font-size:9px">${csActiveId}</span></span>
+    `);
+
+    // ── Stat cards ─────────────────────────────────────────
+    $('#cs-stats-row').html(`
+        <div class="cs-stat-card">
+            <div class="cs-stat-label">Minimum</div>
+            <div class="cs-stat-value">${fmt(vMin)}</div>
+        </div>
+        <div class="cs-stat-card">
+            <div class="cs-stat-label">Mean</div>
+            <div class="cs-stat-value">${fmt(vMean)}</div>
+        </div>
+        <div class="cs-stat-card">
+            <div class="cs-stat-label">Maximum</div>
+            <div class="cs-stat-value">${fmt(vMax)}</div>
+        </div>
+        <div class="cs-stat-card">
+            <div class="cs-stat-label">Points</div>
+            <div class="cs-stat-value">${valid.length}</div>
+        </div>
+    `);
+
+    // ── Destroy old chart ──────────────────────────────────
+    if (csChartInstance) { csChartInstance.destroy(); csChartInstance = null; }
+
+    // ── Draw Chart ─────────────────────────────────────────
+    const ctx = document.getElementById('cs-chart-canvas').getContext('2d');
+
+    csChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels:   dates,
+            datasets: [{
+                label:            'Avg Value',
+                data:             values,
+                borderColor:      '#4fc3f7',
+                backgroundColor:  'rgba(79, 195, 247, 0.10)',
+                borderWidth:      2,
+                pointBackgroundColor: '#fc3d21',
+                pointBorderColor:     '#fc3d21',
+                pointRadius:      4,
+                pointHoverRadius: 7,
+                tension:          0.35,
+                fill:             true,
+                spanGaps:         true,
+            }],
+        },
+        options: {
+            responsive:          true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    labels: { color: '#c4d8f5', font: { size: 12 }, boxWidth: 14 },
+                },
+                tooltip: {
+                    backgroundColor:  'rgba(10, 17, 34, 0.96)',
+                    borderColor:      '#1a3e7a',
+                    borderWidth:      1,
+                    titleColor:       '#4fc3f7',
+                    bodyColor:        '#c4d8f5',
+                    padding:          10,
+                    callbacks: {
+                        label: ctx => {
+                            const v = ctx.parsed.y;
+                            return v === null ? ' No data' : ` ${v.toFixed(4)}`;
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color:    '#c4d8f5',
+                        font:     { size: 10 },
+                        maxRotation: 45,
+                        autoSkip: true,
+                        maxTicksLimit: 12,
+                    },
+                    grid: { color: 'rgba(26, 62, 122, 0.35)' },
+                },
+                y: {
+                    ticks: {
+                        color: '#c4d8f5',
+                        font:  { size: 11 },
+                        callback: v => v.toFixed(3),
+                    },
+                    grid:  { color: 'rgba(26, 62, 122, 0.35)' },
+                    title: {
+                        display: true,
+                        text:    'Average Value',
+                        color:   'rgba(160,200,255,0.55)',
+                        font:    { size: 10 },
+                    },
+                },
+            },
+        },
+    });
+
+    // ── Switch view ────────────────────────────────────────
+    $('#cs-progress-section').hide();
+    $('#cs-error-section').hide();
+    $('#cs-chart-section').show();
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   Boot
+═══════════════════════════════════════════════════════════ */
+initDataLayers();
+buildLayerUI();
+selectBasemap('bluemarble');   // safe here: leafletLayers is initialised above
+applyDate(currentDate);
+</script>
+
+</body>
+</html>
