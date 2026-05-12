@@ -577,6 +577,56 @@
     </div>
 </div>
 
+<!-- ── Add WMS Modal ── -->
+<div class="modal fade" id="wmsModal" tabindex="-1" aria-labelledby="wmsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #0a1122; border: 1px solid var(--nasa-border); border-radius: 8px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #06275e 0%, #0b3d91 100%); border-bottom: 2px solid var(--nasa-red); border-radius: 7px 7px 0 0;">
+                <h5 class="modal-title" id="wmsModalLabel" style="color: #e0ecff; font-size: 13px; font-weight: 600; letter-spacing: 1.8px; text-transform: uppercase;">
+                    <i class="fas fa-plus-circle me-2" style="color:var(--nasa-accent)"></i>
+                    Add WMS Layer
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(0.7);"></button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <!-- Existing Layers Section -->
+                <div id="existing-wms-section" class="mb-4">
+                    <label class="form-label" style="font-size: 11px; color: rgba(160,200,255,0.6); text-transform: uppercase; letter-spacing: 1px;">Existing WMS Services</label>
+                    <div id="wms-list-container" style="max-height: 200px; overflow-y: auto; background: rgba(10, 17, 34, 0.5); border: 1px solid var(--nasa-border); border-radius: 4px; padding: 5px;">
+                        <!-- Populated via JS -->
+                        <div class="text-center py-3" id="wms-loader">
+                            <i class="fas fa-circle-notch fa-spin"></i> Loading...
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="border-color: var(--nasa-border); margin: 20px 0;">
+
+                <!-- New Layer Section -->
+                <input type="hidden" id="selected-wms-id">
+                <div class="mb-3">
+                    <label for="wms-url" class="form-label" style="font-size: 11px; color: rgba(160,200,255,0.6); text-transform: uppercase; letter-spacing: 1px;">WMS Service URL</label>
+                    <input type="text" class="form-control wms-input" id="wms-url" placeholder="https://ows.terrestris.de/osm/service" style="background: rgba(10, 17, 34, 0.85); color: #fff; border: 1px solid var(--nasa-border); font-size: 13px;">
+                </div>
+                <div class="mb-3">
+                    <label for="wms-layer" class="form-label" style="font-size: 11px; color: rgba(160,200,255,0.6); text-transform: uppercase; letter-spacing: 1px;">Layer Name</label>
+                    <input type="text" class="form-control wms-input" id="wms-layer" placeholder="OSM-WMS" style="background: rgba(10, 17, 34, 0.85); color: #fff; border: 1px solid var(--nasa-border); font-size: 13px;">
+                </div>
+                <div class="mb-3">
+                    <label for="wms-label" class="form-label" style="font-size: 11px; color: rgba(160,200,255,0.6); text-transform: uppercase; letter-spacing: 1px;">Display Label</label>
+                    <input type="text" class="form-control wms-input" id="wms-label" placeholder="My Custom Layer" style="background: rgba(10, 17, 34, 0.85); color: #fff; border: 1px solid var(--nasa-border); font-size: 13px;">
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--nasa-border); padding: 12px 20px;">
+                <button type="button" class="tl-btn" data-bs-dismiss="modal" style="background: rgba(10, 45, 122, 0.4); border-color: rgba(26, 62, 122, 0.5);">Cancel</button>
+                <button type="button" class="tl-btn" style="background: var(--nasa-red); border-color: var(--nasa-red); font-weight: 600;" onclick="addWMSLayer()">
+                    <i class="fas fa-plus me-1"></i> Add Layer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ── Layer Manager ── -->
 <div id="layer-manager">
     <div id="lm-header" onclick="toggleLayerManager()">
@@ -907,7 +957,9 @@ function initDataLayers() {
 function enforceZOrder() {
     [...LAYER_DEFS].reverse().forEach(def => {
         const lyr = leafletLayers[def.id];
-        if (lyr && def.visible) lyr.bringToFront();
+        if (lyr && def.visible) {
+            if (lyr.bringToFront) lyr.bringToFront();
+        }
     });
 }
 
@@ -915,7 +967,12 @@ function refreshAllTimes() {
     const time = toWMTSTime(currentDate);
     LAYER_DEFS.forEach(def => {
         if (leafletLayers[def.id]) {
-            leafletLayers[def.id].setTime(time);
+            if (def.isWMS) {
+                // If the WMS supports TIME parameter, update it
+                leafletLayers[def.id].setParams({ TIME: time }, false);
+            } else if (leafletLayers[def.id].setTime) {
+                leafletLayers[def.id].setTime(time);
+            }
         }
     });
     // Keep MODIS basemap in sync with the timeline
@@ -923,6 +980,188 @@ function refreshAllTimes() {
         currentBasemap.setTime(time);
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Custom WMS Addition
+═══════════════════════════════════════════════════════════ */
+function loadWMSServices() {
+    $('#wms-loader').show();
+    $('#wms-list-container').find('.wms-entry').remove();
+
+    $.getJSON('/api/wms/', function(data) {
+        $('#wms-loader').hide();
+        if (data.length === 0) {
+            $('#wms-list-container').append('<div class="text-center py-2 wms-entry" style="font-size: 11px; color: rgba(160,200,255,0.4);">No services found.</div>');
+            return;
+        }
+        data.forEach(s => {
+            const $entry = $(`
+                <div class="wms-entry" style="padding: 8px; border-bottom: 1px solid rgba(26, 62, 122, 0.3); cursor: pointer; transition: background 0.15s;">
+                    <div style="font-size: 12px; font-weight: 600; color: var(--nasa-accent);">${s.label}</div>
+                    <div style="font-size: 10px; color: rgba(160,200,255,0.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${s.url}</div>
+                    <div style="font-size: 9px; color: rgba(160,200,255,0.3); display: flex; justify-content: space-between; margin-top: 4px;">
+                        <span><i class="fas fa-user me-1"></i>${s.creator}</span>
+                        <span><i class="fas fa-calendar-alt me-1"></i>${s.created_at}</span>
+                    </div>
+                </div>
+            `);
+            $entry.on('click', () => selectExistingWMS(s));
+            $entry.hover(
+                function() { $(this).css('background', 'rgba(79, 195, 247, 0.1)'); },
+                function() { $(this).css('background', 'transparent'); }
+            );
+            $('#wms-list-container').append($entry);
+        });
+    });
+}
+
+function selectExistingWMS(service) {
+    $('#wms-url').val(service.url);
+    $('#wms-layer').val(service.layers);
+    $('#wms-label').val(service.label);
+    $('#selected-wms-id').val(service.id);
+}
+
+// Clear selected ID if user types in any input
+$(document).on('input', '.wms-input', function() {
+    $('#selected-wms-id').val('');
+});
+
+// Attach event to load WMS when modal is shown
+$('#wmsModal').on('show.bs.modal', function () {
+    loadWMSServices();
+    $('#selected-wms-id').val(''); // Reset on open
+});
+
+function addWMSLayer() {
+    const url = $('#wms-url').val().trim();
+    const layerName = $('#wms-layer').val().trim();
+    const label = $('#wms-label').val().trim() || layerName || 'New WMS Layer';
+    const selectedId = $('#selected-wms-id').val();
+
+    if (!url || !layerName) {
+        alert('Please provide both URL and Layer Name.');
+        return;
+    }
+
+    // If we have a selectedId, it means the user picked from the list and didn't change the inputs.
+    // In this case, we skip the save call and just add to map.
+    if (selectedId) {
+        addWMSLayerToMap(url, layerName, label, selectedId);
+        return;
+    }
+
+    const payload = {
+        url: url,
+        layers: layerName,
+        label: label
+    };
+
+    fetch('/api/wms/save/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        addWMSLayerToMap(url, layerName, label, data.id);
+    })
+    .catch(error => {
+        console.error('Error saving WMS:', error);
+        alert('Failed to save WMS service, but adding to map anyway.');
+        addWMSLayerToMap(url, layerName, label, Date.now(), true);
+    });
+}
+
+function addWMSLayerToMap(url, layerName, label, id, isUnsaved = false) {
+    const layerId = 'wms-' + id;
+    const newDef = {
+        id: layerId,
+        url: url,
+        layers: layerName,
+        label: label,
+        sublabel: isUnsaved ? 'Custom WMS Layer (Unsaved)' : 'Custom WMS Layer',
+        color: isUnsaved ? '#ffc107' : '#4fc3f7',
+        opacity: 0.85,
+        visible: true,
+        isWMS: true
+    };
+
+    // Insert at beginning of LAYER_DEFS so it appears at top
+    LAYER_DEFS.unshift(newDef);
+
+    const lyr = L.tileLayer.wms(url, {
+        layers: layerName,
+        format: 'image/png',
+        transparent: true,
+        opacity: newDef.opacity,
+        attribution: 'Custom WMS',
+        version: '1.1.1'
+    });
+
+    lyr.addTo(map);
+    leafletLayers[layerId] = lyr;
+
+    buildLayerUI();
+    enforceZOrder();
+    
+    $('#wmsModal').modal('hide');
+    // Clear inputs
+    $('#wms-url').val('');
+    $('#wms-layer').val('');
+    $('#wms-label').val('');
+    $('#selected-wms-id').val('');
+}
+
+// Helper for CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Add a custom control for "Add WMS" on the map
+const AddWMSControl = L.Control.extend({
+    options: {
+        position: 'topleft'
+    },
+    onAdd: function (map) {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        container.style.backgroundColor = 'var(--nasa-panel)';
+        container.style.width = '34px';
+        container.style.height = '34px';
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.justifyContent = 'center';
+        container.style.cursor = 'pointer';
+        container.style.border = '1px solid var(--nasa-border)';
+        container.title = 'Add WMS Layer';
+
+        const icon = L.DomUtil.create('i', 'fas fa-plus-circle', container);
+        icon.style.color = 'var(--nasa-accent)';
+        icon.style.fontSize = '16px';
+
+        container.onclick = function (e) {
+            L.DomEvent.stopPropagation(e);
+            $('#wmsModal').modal('show');
+        };
+
+        return container;
+    }
+});
+map.addControl(new AddWMSControl());
 
 
 /* ═══════════════════════════════════════════════════════════
