@@ -771,24 +771,28 @@ const TimedWMTS = L.TileLayer.extend({
 
     initialize(def, time, options) {
         this._def = def;
-        const url = TimedWMTS.makeUrl(def.gibs, time);
+        const url = TimedWMTS.makeUrl(def.gibs, time, def.tilematrixset, def.format);
         L.TileLayer.prototype.initialize.call(this, url, options);
     },
 
     setTime(time) {
-        this.setUrl(TimedWMTS.makeUrl(this._def.gibs, time), /* noRedraw= */ false);
+        this.setUrl(
+            TimedWMTS.makeUrl(this._def.gibs, time, this._def.tilematrixset, this._def.format),
+            /* noRedraw= */ false
+        );
     },
 });
 
-TimedWMTS.makeUrl = function(layer, time) {
+// tilematrixset defaults to '2km', format defaults to 'image%2Fpng'
+TimedWMTS.makeUrl = function(layer, time, tilematrixset, format) {
     return (
         'https://gibs-{s}.earthdata.nasa.gov/wmts/epsg4326/best/wmts.cgi' +
         `?TIME=${time}` +
         `&layer=${layer}` +
         '&style=default' +
-        '&tilematrixset=2km' +
+        `&tilematrixset=${tilematrixset || '2km'}` +
         '&Service=WMTS&Request=GetTile&Version=1.0.0' +
-        '&Format=image%2Fpng' +
+        `&Format=${format || 'image%2Fpng'}` +
         '&TileMatrix={z}&TileCol={x}&TileRow={y}'
     );
 };
@@ -864,15 +868,19 @@ const BASEMAP_DEFS = [
         live:    true,   // updates with timeline date
         create() {
             return new TimedWMTS(
-                { gibs: 'MODIS_Terra_CorrectedReflectance_TrueColor' },
+                {
+                    gibs:          'MODIS_Terra_CorrectedReflectance_TrueColor',
+                    tilematrixset: '250m',
+                    format:        'image%2Fjpeg',
+                },
                 toWMTSTime(currentDate),
                 {
-                    subdomains:     ['a', 'b', 'c'],
-                    tileSize:       512,
-                    maxNativeZoom:  9,
-                    noWrap:         true,
-                    bounds:         [[-90, -180], [90, 180]],
-                    attribution:    '&copy; <a href="https://earthdata.nasa.gov" target="_blank">NASA EOSDIS GIBS</a>',
+                    subdomains:    ['a', 'b', 'c'],
+                    tileSize:      512,
+                    maxNativeZoom: 9,
+                    noWrap:        true,
+                    bounds:        [[-90, -180], [90, 180]],
+                    attribution:   '&copy; <a href="https://earthdata.nasa.gov" target="_blank">NASA EOSDIS GIBS</a>',
                 }
             );
         },
