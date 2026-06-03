@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EarthRISE Air Quality Sampler</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
@@ -18,16 +21,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
 
     <style>
-        /* ── NASA Design Tokens ── */
+        /* ── Horizon Design System tokens ── */
         :root {
-            --nasa-blue:       #0b3d91;
-            --nasa-blue-dark:  #06275e;
-            --nasa-red:        #fc3d21;
-            --nasa-bg:         #080d18;
-            --nasa-panel:      rgba(10, 17, 34, 0.94);
-            --nasa-border:     #1a3e7a;
-            --nasa-text:       #c4d8f5;
-            --nasa-accent:     #4fc3f7;
+            --color-primary:   #0170B9;
+            --color-action:    #1c67e3;
+            --color-hover:     #f64137;
+            --color-dark:      #2e2e32;
+            --color-text:      #3a3a3a;
+            --color-text-meta: #58585b;
+            --color-bg:        #F5F5F5;
+            --color-surface:   #FFFFFF;
+            --color-border:    #dddddd;
+            --color-focus:     #444447;
+            --radius:          4px;
+            --shadow-card:     0px 0px 4px 0 rgba(0,0,0,0.34);
+            --shadow-menu:     0px 4px 10px -2px rgba(0,0,0,0.1);
+            --font-body:       'Public Sans', sans-serif;
+            --font-heading:    'Inter', sans-serif;
             --header-h:        56px;
             --timeline-h:      90px;
         }
@@ -37,42 +47,46 @@
         html, body {
             margin: 0; padding: 0;
             height: 100%; overflow: hidden;
-            background: var(--nasa-bg);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            color: var(--nasa-text);
+            background: #050a14;
+            font-family: var(--font-body);
+            color: var(--color-text);
+            font-size: 16px;
+            line-height: 1.65em;
         }
 
         /* ── Header ── */
         #nasa-header {
             position: fixed; top: 0; left: 0; right: 0;
             height: var(--header-h);
-            background: linear-gradient(90deg, var(--nasa-blue-dark) 0%, var(--nasa-blue) 100%);
-            border-bottom: 3px solid var(--nasa-red);
+            background: var(--color-dark);
+            border-bottom: none;
             display: flex; align-items: center; gap: 14px;
             padding: 0 18px;
             z-index: 2000;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.6);
+            box-shadow: var(--shadow-menu);
         }
         .nasa-logo {
-            font-size: 24px; font-weight: 900;
-            color: #fff; letter-spacing: 4px;
-            text-shadow: 0 0 12px rgba(252,61,33,0.5);
+            font-family: var(--font-heading);
+            font-size: 20px; font-weight: 700;
+            color: #fff; letter-spacing: 3px;
         }
-        .nasa-logo span { color: var(--nasa-red); }
+        .nasa-logo span { color: var(--color-hover); }
         .app-title {
-            font-size: 12px; color: #a8c8ff;
+            font-family: var(--font-body);
+            font-size: 11px; color: rgba(255,255,255,0.65);
             letter-spacing: 2px; text-transform: uppercase;
-            border-left: 2px solid rgba(255,255,255,0.25);
+            border-left: 2px solid rgba(255,255,255,0.2);
             padding-left: 14px; line-height: 1.3;
         }
         #header-date-badge {
             margin-left: auto;
-            background: rgba(0,0,0,0.35);
-            border: 1px solid var(--nasa-border);
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
             border-radius: 20px;
             padding: 3px 14px;
-            font-size: 12px; color: var(--nasa-accent);
+            font-size: 12px; color: #ffffff;
             letter-spacing: 1px; font-weight: 600;
+            font-family: var(--font-body);
         }
 
         /* ── Map ── */
@@ -90,33 +104,33 @@
             top: calc(var(--header-h) + 14px);
             right: 14px;
             width: 300px;
-            background: var(--nasa-panel);
-            border: 1px solid var(--nasa-border);
-            border-radius: 6px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
             z-index: 1500;
-            backdrop-filter: blur(14px);
-            box-shadow: 0 6px 32px rgba(0,0,0,0.65);
+            box-shadow: var(--shadow-card);
         }
         #lm-header {
-            background: linear-gradient(135deg, #0a2d7a 0%, #1455b5 100%);
-            border-radius: 5px 5px 0 0;
+            background: var(--color-dark);
+            border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
             padding: 10px 13px;
             display: flex; align-items: center; gap: 8px;
             cursor: pointer; user-select: none;
         }
         #lm-header .lm-title {
             flex: 1;
+            font-family: var(--font-heading);
             font-size: 11px; font-weight: 600;
             letter-spacing: 1.8px; text-transform: uppercase;
-            color: #e0ecff;
+            color: #ffffff;
         }
         #lm-collapse-btn {
             background: transparent; border: none;
             color: rgba(255,255,255,0.65); font-size: 12px;
-            cursor: pointer; padding: 2px 5px; border-radius: 3px;
+            cursor: pointer; padding: 2px 5px; border-radius: var(--radius);
             transition: background 0.15s;
         }
-        #lm-collapse-btn:hover { background: rgba(255,255,255,0.12); }
+        #lm-collapse-btn:hover { background: rgba(255,255,255,0.15); }
         #lm-body { padding: 8px; }
 
         /* ── Layer Items ── */
@@ -125,84 +139,86 @@
             min-height: 44px;
         }
         .layer-item {
-            background: rgba(25, 55, 115, 0.32);
-            border: 1px solid rgba(26, 62, 122, 0.7);
-            border-radius: 5px;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
             padding: 9px 10px;
             margin: 5px 0;
             cursor: default;
             transition: border-color 0.15s, background 0.15s;
         }
-        .layer-item:hover { border-color: var(--nasa-accent); }
+        .layer-item:hover { border-color: var(--color-primary); }
         .layer-item.ui-sortable-placeholder {
-            background: rgba(79, 195, 247, 0.08);
-            border: 1px dashed var(--nasa-accent);
+            background: rgba(1,112,185,0.06);
+            border: 1px dashed var(--color-primary);
             visibility: visible !important;
-            border-radius: 5px;
+            border-radius: var(--radius);
         }
         .layer-item.ui-sortable-helper {
-            background: rgba(10, 40, 100, 0.95);
-            box-shadow: 0 6px 24px rgba(0,0,0,0.6);
-            border-color: var(--nasa-accent);
+            background: var(--color-surface);
+            box-shadow: var(--shadow-card);
+            border-color: var(--color-primary);
         }
         .layer-row1 {
             display: flex; align-items: center; gap: 8px;
             margin-bottom: 8px;
         }
         .drag-handle {
-            color: rgba(160, 200, 255, 0.35);
+            color: rgba(58,58,58,0.35);
             cursor: grab; font-size: 11px; padding: 2px;
             flex-shrink: 0;
         }
         .drag-handle:active { cursor: grabbing; }
         .layer-swatch {
             width: 9px; height: 9px; border-radius: 50%;
-            flex-shrink: 0; box-shadow: 0 0 5px rgba(255,255,255,0.3);
+            flex-shrink: 0;
         }
         .layer-label {
             flex: 1;
+            font-family: var(--font-body);
             font-size: 12px; font-weight: 500;
-            color: var(--nasa-text); line-height: 1.3;
+            color: var(--color-text); line-height: 1.3;
         }
         .layer-label small {
             display: block; font-size: 9px;
-            color: rgba(160, 200, 255, 0.45);
+            color: var(--color-text-meta);
             letter-spacing: 0.5px; font-weight: 400;
         }
         .vis-btn {
             background: transparent; border: none;
-            color: var(--nasa-accent); font-size: 11px;
-            cursor: pointer; padding: 3px 5px; border-radius: 3px;
+            color: var(--color-primary); font-size: 11px;
+            cursor: pointer; padding: 3px 5px; border-radius: var(--radius);
             flex-shrink: 0;
             transition: background 0.15s, color 0.15s;
         }
-        .vis-btn:hover { background: rgba(79, 195, 247, 0.15); }
-        .vis-btn.layer-hidden { color: rgba(160, 200, 255, 0.3); }
+        .vis-btn:hover { background: rgba(1,112,185,0.1); }
+        .vis-btn.layer-hidden { color: var(--color-border); }
         .layer-row2 { display: flex; align-items: center; gap: 8px; }
         .opacity-icon {
-            font-size: 9px; color: rgba(160, 200, 255, 0.4); flex-shrink: 0;
+            font-size: 9px; color: var(--color-text-meta); flex-shrink: 0;
         }
         .opacity-slider {
             flex: 1; -webkit-appearance: none;
             height: 3px; border-radius: 2px;
-            background: rgba(26, 62, 122, 0.9);
+            background: var(--color-border);
             outline: none; cursor: pointer;
         }
         .opacity-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 14px; height: 14px; border-radius: 50%;
-            background: var(--nasa-accent);
-            border: 2px solid var(--nasa-bg);
+            background: var(--color-primary);
+            border: 2px solid var(--color-surface);
             cursor: pointer;
         }
         .opacity-slider::-moz-range-thumb {
             width: 14px; height: 14px; border-radius: 50%;
-            background: var(--nasa-accent);
-            border: 2px solid var(--nasa-bg);
+            background: var(--color-primary);
+            border: 2px solid var(--color-surface);
             cursor: pointer;
         }
         .opacity-pct {
-            font-size: 9px; color: rgba(160, 200, 255, 0.45);
+            font-family: var(--font-body);
+            font-size: 9px; color: var(--color-text-meta);
             min-width: 28px; text-align: right; flex-shrink: 0;
         }
 
@@ -211,11 +227,10 @@
             position: fixed;
             bottom: 0; left: 0; right: 0;
             height: var(--timeline-h);
-            background: var(--nasa-panel);
-            border-top: 2px solid var(--nasa-border);
+            background: var(--color-dark);
+            border-top: none;
             z-index: 2000;
-            backdrop-filter: blur(14px);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
             padding: 9px 18px 11px;
             display: flex; flex-direction: column; gap: 7px;
         }
@@ -223,60 +238,65 @@
             display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;
         }
         .tl-btn {
-            background: rgba(10, 45, 122, 0.75);
-            border: 1px solid var(--nasa-border);
-            color: var(--nasa-text);
-            border-radius: 4px; padding: 5px 10px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.85);
+            border-radius: var(--radius); padding: 5px 10px;
+            font-family: var(--font-body);
             font-size: 12px; cursor: pointer;
             white-space: nowrap; flex-shrink: 0;
-            transition: background 0.15s, border-color 0.15s;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
         }
-        .tl-btn:hover { background: rgba(252, 61, 33, 0.55); border-color: var(--nasa-red); }
-        #play-btn.playing { background: var(--nasa-red); border-color: #c0301a; }
+        .tl-btn:hover { background: var(--color-hover); border-color: var(--color-hover); color: #fff; }
+        #play-btn.playing { background: var(--color-hover); border-color: var(--color-hover); }
         #current-date-display {
+            font-family: var(--font-heading);
             font-size: 16px; font-weight: 700;
-            color: var(--nasa-accent); letter-spacing: 2px;
+            color: #ffffff; letter-spacing: 2px;
             min-width: 108px; text-align: center; flex-shrink: 0;
         }
         #date-picker {
-            background: rgba(10, 17, 34, 0.85);
-            color: var(--nasa-text);
-            border: 1px solid var(--nasa-border);
-            border-radius: 4px; padding: 4px 9px;
+            background: rgba(255,255,255,0.08);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: var(--radius); padding: 4px 9px;
+            font-family: var(--font-body);
             font-size: 12px; outline: none; flex-shrink: 0;
         }
-        #date-picker:focus { border-color: var(--nasa-accent); }
+        #date-picker:focus { border-color: var(--color-primary); outline: 1px dotted var(--color-primary); }
         #speed-select {
-            background: rgba(10, 17, 34, 0.85);
-            color: var(--nasa-text);
-            border: 1px solid var(--nasa-border);
-            border-radius: 4px; padding: 4px 8px;
+            background: rgba(255,255,255,0.08);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: var(--radius); padding: 4px 8px;
+            font-family: var(--font-body);
             font-size: 11px; outline: none; flex-shrink: 0;
         }
         .tl-spacer { flex: 1; }
         .tl-row2 { display: flex; align-items: center; gap: 8px; }
         .tl-range-label {
-            font-size: 10px; color: rgba(160, 200, 255, 0.45);
+            font-family: var(--font-body);
+            font-size: 10px; color: rgba(255,255,255,0.45);
             white-space: nowrap; flex-shrink: 0;
         }
         #timeline-slider {
             flex: 1; -webkit-appearance: none;
             height: 5px; border-radius: 3px;
-            background: rgba(26, 62, 122, 0.8);
+            background: rgba(255,255,255,0.15);
             outline: none; cursor: pointer;
         }
         #timeline-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 20px; height: 20px; border-radius: 50%;
-            background: var(--nasa-red);
-            border: 3px solid #e0e8ff;
+            background: var(--color-hover);
+            border: 3px solid #ffffff;
             cursor: pointer;
             box-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
         #timeline-slider::-moz-range-thumb {
             width: 20px; height: 20px; border-radius: 50%;
-            background: var(--nasa-red);
-            border: 3px solid #e0e8ff;
+            background: var(--color-hover);
+            border: 3px solid #ffffff;
             cursor: pointer;
         }
 
@@ -285,36 +305,37 @@
             position: fixed;
             top: calc(var(--header-h) + 12px);
             left: 50%; transform: translateX(-50%);
-            background: rgba(10, 45, 122, 0.92);
-            color: var(--nasa-accent);
+            background: var(--color-surface);
+            color: var(--color-primary);
+            font-family: var(--font-body);
             font-size: 11px; letter-spacing: 1px;
             padding: 5px 16px; border-radius: 20px;
-            border: 1px solid var(--nasa-border);
+            border: 1px solid var(--color-border);
             z-index: 3000; display: none;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+            box-shadow: var(--shadow-card);
         }
 
         /* ── Leaflet overrides ── */
         .leaflet-control-zoom {
-            border: 1px solid var(--nasa-border) !important;
-            background: var(--nasa-panel) !important;
+            border: 1px solid var(--color-border) !important;
+            background: var(--color-surface) !important;
+            border-radius: var(--radius) !important;
         }
         .leaflet-control-zoom a {
             background: transparent !important;
-            color: var(--nasa-text) !important;
-            border-bottom: 1px solid var(--nasa-border) !important;
+            color: var(--color-text) !important;
+            border-bottom: 1px solid var(--color-border) !important;
         }
         .leaflet-control-zoom a:hover {
-            background: rgba(11, 61, 145, 0.5) !important;
-            color: var(--nasa-accent) !important;
+            background: rgba(1,112,185,0.1) !important;
+            color: var(--color-primary) !important;
         }
         .leaflet-control-attribution {
-            background: rgba(8, 13, 24, 0.82) !important;
-            color: rgba(160, 200, 255, 0.55) !important;
+            background: rgba(46,46,50,0.85) !important;
+            color: rgba(255,255,255,0.5) !important;
             font-size: 10px !important;
         }
-        .leaflet-control-attribution a { color: var(--nasa-accent) !important; }
+        .leaflet-control-attribution a { color: var(--color-action) !important; }
 
         /* ── Responsive tweaks ── */
         @media (max-width: 768px) {
@@ -323,190 +344,230 @@
             .tl-btn .btn-label { display: none; }
         }
 
-        /* ── Leaflet Draw Toolbar – NASA Theme ── */
+        /* ── Leaflet Draw Toolbar – Horizon Theme ── */
         .leaflet-draw-toolbar a,
         .leaflet-draw-toolbar a:hover {
-            background-color: var(--nasa-panel) !important;
-            border-color: var(--nasa-border) !important;
+            background-color: var(--color-surface) !important;
+            border-color: var(--color-border) !important;
         }
         .leaflet-draw-toolbar a:hover {
-            background-color: rgba(11, 61, 145, 0.65) !important;
+            background-color: rgba(1,112,185,0.1) !important;
         }
-        .leaflet-draw-toolbar .leaflet-draw-draw-polygon,
-        .leaflet-draw-toolbar .leaflet-draw-draw-rectangle {
-            /* keep sprite icons, just override bg */
-        }
-        .leaflet-draw-section { border-color: var(--nasa-border) !important; }
+        .leaflet-draw-section { border-color: var(--color-border) !important; }
         .leaflet-draw-actions a {
-            background: var(--nasa-blue) !important;
+            background: var(--color-primary) !important;
             color: #fff !important;
             border-right-color: rgba(255,255,255,0.2) !important;
         }
         .leaflet-draw-actions a:hover {
-            background: var(--nasa-red) !important;
+            background: var(--color-hover) !important;
         }
         .leaflet-draw-tooltip {
-            background: rgba(10, 17, 34, 0.92) !important;
-            border: 1px solid var(--nasa-border) !important;
-            color: var(--nasa-accent) !important;
+            background: var(--color-surface) !important;
+            border: 1px solid var(--color-border) !important;
+            color: var(--color-text) !important;
+            font-family: var(--font-body) !important;
             font-size: 11px !important;
             padding: 4px 10px !important;
         }
         .leaflet-draw-tooltip-single,
         .leaflet-draw-tooltip-subtext {
-            color: var(--nasa-text) !important;
+            color: var(--color-text-meta) !important;
         }
-        /* drawn shape style */
-        .drawn-aoi-shape { /* applied via Leaflet options */ }
 
         /* ── ClimateSERV Modal ── */
         #climateModal .modal-content {
-            background: #0a1122;
-            border: 1px solid var(--nasa-border);
-            border-radius: 8px;
-            box-shadow: 0 12px 48px rgba(0,0,0,0.8);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.2);
         }
         #climateModal .modal-header {
-            background: linear-gradient(135deg, #06275e 0%, #0b3d91 100%);
-            border-bottom: 2px solid var(--nasa-red);
-            border-radius: 7px 7px 0 0;
+            background: var(--color-dark);
+            border-bottom: none;
+            border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
             padding: 14px 20px;
         }
         #climateModal .modal-title {
+            font-family: var(--font-heading);
             font-size: 13px; font-weight: 600;
             letter-spacing: 1.8px; text-transform: uppercase;
-            color: #e0ecff;
+            color: #ffffff;
         }
-        #climateModal .btn-close {
-            filter: invert(1) brightness(0.7);
-        }
+        #climateModal .btn-close { filter: invert(1) brightness(0.8); }
         #climateModal .modal-body {
             padding: 20px;
-            background: #0a1122;
-            border-radius: 0 0 7px 7px;
+            background: var(--color-surface);
+            color: var(--color-text);
         }
-        /* progress section */
         #cs-progress-section { text-align: center; padding: 20px 0 10px; }
-        #cs-spinner-wrap {
-            font-size: 36px; color: var(--nasa-accent);
-            margin-bottom: 16px;
-        }
+        #cs-spinner-wrap { font-size: 36px; color: var(--color-primary); margin-bottom: 16px; }
         #cs-status-text {
-            font-size: 12px; color: var(--nasa-text);
+            font-family: var(--font-body);
+            font-size: 12px; color: var(--color-text-meta);
             letter-spacing: 0.8px; margin-bottom: 14px;
         }
         #cs-request-id {
-            font-size: 10px; color: rgba(160,200,255,0.4);
+            font-size: 10px; color: var(--color-text-meta);
             word-break: break-all; margin-bottom: 12px;
         }
         .cs-progress-wrap {
-            background: rgba(26,62,122,0.4);
-            border-radius: 4px; height: 8px;
-            overflow: hidden; margin: 0 auto;
-            max-width: 480px;
+            background: var(--color-border);
+            border-radius: var(--radius); height: 8px;
+            overflow: hidden; margin: 0 auto; max-width: 480px;
         }
         #cs-progress-bar {
             height: 100%; width: 0%;
-            background: linear-gradient(90deg, var(--nasa-blue), var(--nasa-accent));
-            border-radius: 4px;
-            transition: width 0.4s ease;
+            background: var(--color-primary);
+            border-radius: var(--radius); transition: width 0.4s ease;
         }
         #cs-progress-pct {
-            font-size: 11px; color: var(--nasa-accent);
+            font-family: var(--font-body);
+            font-size: 11px; color: var(--color-primary);
             margin-top: 6px; letter-spacing: 1px;
         }
-        /* error state */
         #cs-error-section { display: none; text-align: center; padding: 20px 0; }
-        .cs-error-icon { font-size: 32px; color: var(--nasa-red); margin-bottom: 10px; }
-        .cs-error-msg { font-size: 12px; color: #ffa0a0; }
-        /* chart section */
+        .cs-error-icon { font-size: 32px; color: var(--color-hover); margin-bottom: 10px; }
+        .cs-error-msg { font-family: var(--font-body); font-size: 12px; color: var(--color-text); }
         #cs-chart-section { display: none; }
-        .cs-meta-bar {
-            display: flex; flex-wrap: wrap; gap: 10px;
-            margin-bottom: 14px;
-        }
+        .cs-meta-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
         .cs-meta-pill {
-            background: rgba(26,62,122,0.5);
-            border: 1px solid var(--nasa-border);
+            background: rgba(1,112,185,0.08);
+            border: 1px solid rgba(1,112,185,0.2);
             border-radius: 20px; padding: 3px 12px;
-            font-size: 10px; color: var(--nasa-text);
-            letter-spacing: 0.5px;
+            font-family: var(--font-body);
+            font-size: 10px; color: var(--color-text-meta); letter-spacing: 0.5px;
         }
-        .cs-meta-pill span { color: var(--nasa-accent); font-weight: 600; }
-        .cs-stats-row {
-            display: flex; gap: 8px; margin-bottom: 16px;
-        }
+        .cs-meta-pill span { color: var(--color-primary); font-weight: 600; }
+        .cs-stats-row { display: flex; gap: 8px; margin-bottom: 16px; }
         .cs-stat-card {
             flex: 1;
-            background: rgba(11,61,145,0.25);
-            border: 1px solid var(--nasa-border);
-            border-radius: 5px; padding: 8px 12px;
-            text-align: center;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius); padding: 8px 12px;
+            text-align: center; box-shadow: var(--shadow-card);
         }
         .cs-stat-card .cs-stat-label {
+            font-family: var(--font-body);
             font-size: 9px; letter-spacing: 1.2px;
-            text-transform: uppercase; color: rgba(160,200,255,0.5);
-            margin-bottom: 4px;
+            text-transform: uppercase; color: var(--color-text-meta); margin-bottom: 4px;
         }
         .cs-stat-card .cs-stat-value {
-            font-size: 18px; font-weight: 700; color: var(--nasa-accent);
+            font-family: var(--font-heading);
+            font-size: 18px; font-weight: 700; color: var(--color-primary);
         }
-        #cs-chart-canvas-wrap {
-            position: relative; height: 320px;
+        #cs-chart-canvas-wrap { position: relative; height: 320px; }
+
+        /* ── WMS Modal ── */
+        #wmsModal .modal-content {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+        }
+        #wmsModal .modal-header {
+            background: var(--color-dark);
+            border-bottom: none;
+            border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
+            padding: 14px 20px;
+        }
+        #wmsModal .modal-title {
+            font-family: var(--font-heading);
+            font-size: 13px; font-weight: 600;
+            letter-spacing: 1.8px; text-transform: uppercase;
+            color: #ffffff;
+        }
+        #wmsModal .btn-close { filter: invert(1) brightness(0.8); }
+        #wmsModal .modal-body { padding: 20px; background: var(--color-surface); }
+        #wmsModal .modal-footer {
+            border-top: 1px solid var(--color-border);
+            padding: 12px 20px;
+            background: var(--color-surface);
+        }
+        #wmsModal .form-label {
+            font-family: var(--font-body);
+            font-size: 11px; color: var(--color-text-meta);
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        #wmsModal .form-control {
+            background: var(--color-bg);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            font-family: var(--font-body); font-size: 13px;
+        }
+        #wmsModal .form-control:focus {
+            background: var(--color-surface);
+            border-color: var(--color-focus);
+            outline: 1px dotted var(--color-focus);
+            box-shadow: none;
+            color: var(--color-text);
+        }
+        #wms-list-container {
+            max-height: 200px; overflow-y: auto;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius); padding: 5px;
+        }
+        #wmsModal hr { border-color: var(--color-border); margin: 20px 0; }
+
+        /* Modal button variants (used inside light-surface footers) */
+        .tl-btn.tl-btn-secondary {
+            background: var(--color-bg);
+            border-color: var(--color-border);
+            color: var(--color-text);
+        }
+        .tl-btn.tl-btn-secondary:hover { background: var(--color-hover); border-color: var(--color-hover); color: #fff; }
+        .tl-btn.tl-btn-primary {
+            background: var(--color-dark);
+            border-color: var(--color-dark);
+            color: #fff; font-weight: 600;
+        }
+        .tl-btn.tl-btn-primary:hover { background: var(--color-hover); border-color: var(--color-hover); }
+
+        /* SPEED label in timeline bar */
+        .tl-speed-label {
+            font-size: 10px; color: rgba(255,255,255,0.45);
+            white-space: nowrap; flex-shrink: 0;
         }
 
         /* ── Basemap Selector ── */
         .lm-divider {
             border: none;
-            border-top: 1px solid rgba(26, 62, 122, 0.7);
+            border-top: 1px solid var(--color-border);
             margin: 8px 0 6px;
         }
         .lm-section-title {
+            font-family: var(--font-heading);
             font-size: 9px; font-weight: 600;
             letter-spacing: 1.8px; text-transform: uppercase;
-            color: rgba(160, 200, 255, 0.45);
-            padding: 0 2px 4px;
+            color: var(--color-text-meta); padding: 0 2px 4px;
         }
         .basemap-btn {
             width: 100%;
             display: flex; align-items: center; gap: 8px;
-            background: rgba(25, 55, 115, 0.2);
-            border: 1px solid rgba(26, 62, 122, 0.5);
-            border-radius: 4px;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
             padding: 7px 9px; margin: 4px 0;
             cursor: pointer; text-align: left;
-            color: var(--nasa-text);
+            color: var(--color-text);
+            font-family: var(--font-body);
             transition: background 0.15s, border-color 0.15s;
         }
-        .basemap-btn:hover {
-            background: rgba(25, 55, 115, 0.5);
-            border-color: var(--nasa-accent);
-        }
-        .basemap-btn.active {
-            background: rgba(11, 61, 145, 0.45);
-            border-color: var(--nasa-accent);
-        }
+        .basemap-btn:hover { background: rgba(1,112,185,0.06); border-color: var(--color-primary); }
+        .basemap-btn.active { background: rgba(1,112,185,0.1); border-color: var(--color-primary); }
         .basemap-btn .bm-icon {
-            font-size: 13px; color: var(--nasa-accent);
+            font-size: 13px; color: var(--color-primary);
             width: 16px; text-align: center; flex-shrink: 0;
         }
-        .basemap-btn.active .bm-icon { color: #fff; }
         .basemap-btn .bm-text { flex: 1; }
-        .basemap-btn .bm-label {
-            font-size: 11px; font-weight: 500;
-            color: var(--nasa-text); display: block;
-        }
-        .basemap-btn .bm-sub {
-            font-size: 9px; color: rgba(160, 200, 255, 0.45);
-        }
-        .basemap-btn .bm-check {
-            font-size: 10px; color: var(--nasa-accent);
-            opacity: 0;
-        }
+        .basemap-btn .bm-label { font-size: 11px; font-weight: 500; color: var(--color-text); display: block; }
+        .basemap-btn .bm-sub { font-size: 9px; color: var(--color-text-meta); }
+        .basemap-btn .bm-check { font-size: 10px; color: var(--color-primary); opacity: 0; }
         .basemap-btn.active .bm-check { opacity: 1; }
         .basemap-badge-live {
-            font-size: 8px; background: var(--nasa-red);
-            color: #fff; border-radius: 3px; padding: 1px 4px;
+            font-size: 8px; background: var(--color-hover);
+            color: #fff; border-radius: var(--radius); padding: 1px 4px;
             letter-spacing: 0.5px; margin-left: 4px; vertical-align: middle;
         }
     </style>
@@ -534,10 +595,10 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="climateModalLabel">
-                    <i class="fas fa-chart-line me-2" style="color:var(--nasa-accent)"></i>
+                    <i class="fas fa-chart-line me-2"></i>
                     ClimateSERV Data Analysis
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
 
@@ -580,19 +641,19 @@
 <!-- ── Add WMS Modal ── -->
 <div class="modal fade" id="wmsModal" tabindex="-1" aria-labelledby="wmsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="background: #0a1122; border: 1px solid var(--nasa-border); border-radius: 8px;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #06275e 0%, #0b3d91 100%); border-bottom: 2px solid var(--nasa-red); border-radius: 7px 7px 0 0;">
-                <h5 class="modal-title" id="wmsModalLabel" style="color: #e0ecff; font-size: 13px; font-weight: 600; letter-spacing: 1.8px; text-transform: uppercase;">
-                    <i class="fas fa-plus-circle me-2" style="color:var(--nasa-accent)"></i>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="wmsModalLabel">
+                    <i class="fas fa-plus-circle me-2"></i>
                     Add WMS Layer
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(0.7);"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" style="padding: 20px;">
+            <div class="modal-body">
                 <!-- Existing Layers Section -->
                 <div id="existing-wms-section" class="mb-4">
-                    <label class="form-label" style="font-size: 11px; color: rgba(160,200,255,0.6); text-transform: uppercase; letter-spacing: 1px;">Existing WMS Services</label>
-                    <div id="wms-list-container" style="max-height: 200px; overflow-y: auto; background: rgba(10, 17, 34, 0.5); border: 1px solid var(--nasa-border); border-radius: 4px; padding: 5px;">
+                    <label class="form-label wms-form-label">Existing WMS Services</label>
+                    <div id="wms-list-container">
                         <!-- Populated via JS -->
                         <div class="text-center py-3" id="wms-loader">
                             <i class="fas fa-circle-notch fa-spin"></i> Loading...
@@ -600,26 +661,26 @@
                     </div>
                 </div>
 
-                <hr style="border-color: var(--nasa-border); margin: 20px 0;">
+                <hr class="wms-divider">
 
                 <!-- New Layer Section -->
                 <input type="hidden" id="selected-wms-id">
                 <div class="mb-3">
-                    <label for="wms-url" class="form-label" style="font-size: 11px; color: rgba(160,200,255,0.6); text-transform: uppercase; letter-spacing: 1px;">WMS Service URL</label>
-                    <input type="text" class="form-control wms-input" id="wms-url" placeholder="https://ows.terrestris.de/osm/service" style="background: rgba(10, 17, 34, 0.85); color: #fff; border: 1px solid var(--nasa-border); font-size: 13px;">
+                    <label for="wms-url" class="form-label wms-form-label">WMS Service URL</label>
+                    <input type="text" class="form-control wms-input" id="wms-url" placeholder="https://ows.terrestris.de/osm/service">
                 </div>
                 <div class="mb-3">
-                    <label for="wms-layer" class="form-label" style="font-size: 11px; color: rgba(160,200,255,0.6); text-transform: uppercase; letter-spacing: 1px;">Layer Name</label>
-                    <input type="text" class="form-control wms-input" id="wms-layer" placeholder="OSM-WMS" style="background: rgba(10, 17, 34, 0.85); color: #fff; border: 1px solid var(--nasa-border); font-size: 13px;">
+                    <label for="wms-layer" class="form-label wms-form-label">Layer Name</label>
+                    <input type="text" class="form-control wms-input" id="wms-layer" placeholder="OSM-WMS">
                 </div>
                 <div class="mb-3">
-                    <label for="wms-label" class="form-label" style="font-size: 11px; color: rgba(160,200,255,0.6); text-transform: uppercase; letter-spacing: 1px;">Display Label</label>
-                    <input type="text" class="form-control wms-input" id="wms-label" placeholder="My Custom Layer" style="background: rgba(10, 17, 34, 0.85); color: #fff; border: 1px solid var(--nasa-border); font-size: 13px;">
+                    <label for="wms-label" class="form-label wms-form-label">Display Label</label>
+                    <input type="text" class="form-control wms-input" id="wms-label" placeholder="My Custom Layer">
                 </div>
             </div>
-            <div class="modal-footer" style="border-top: 1px solid var(--nasa-border); padding: 12px 20px;">
-                <button type="button" class="tl-btn" data-bs-dismiss="modal" style="background: rgba(10, 45, 122, 0.4); border-color: rgba(26, 62, 122, 0.5);">Cancel</button>
-                <button type="button" class="tl-btn" style="background: var(--nasa-red); border-color: var(--nasa-red); font-weight: 600;" onclick="addWMSLayer()">
+            <div class="modal-footer">
+                <button type="button" class="tl-btn tl-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="tl-btn tl-btn-primary" onclick="addWMSLayer()">
                     <i class="fas fa-plus me-1"></i> Add Layer
                 </button>
             </div>
@@ -675,7 +736,7 @@
         <input type="date" id="date-picker" value="2024-08-21"
                min="2015-01-01" max="2024-12-31">
         <div class="tl-spacer"></div>
-        <label style="font-size:10px; color:rgba(160,200,255,0.45); white-space:nowrap; flex-shrink:0;">
+        <label class="tl-speed-label">
             SPEED
         </label>
         <select id="speed-select">
@@ -701,6 +762,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
+/* ── Chart.js global defaults (Horizon typography) ── */
+Chart.defaults.font.family = "'Public Sans', sans-serif";
+
 /* ═══════════════════════════════════════════════════════════
    Configuration
 ═══════════════════════════════════════════════════════════ */
@@ -725,7 +789,7 @@ const LAYER_DEFS = [
         gibs:     'OMI_Aerosol_Index',
         label:    'Aerosol Index',
         sublabel: 'OMI Aerosol Index · Daily',
-        color:    '#4fc3f7',
+        color:    '#0170B9',
         opacity:  0.85,
         visible:  false,
     },
@@ -981,15 +1045,15 @@ function loadWMSServices() {
     $.getJSON('/api/wms/', function(data) {
         $('#wms-loader').hide();
         if (data.length === 0) {
-            $('#wms-list-container').append('<div class="text-center py-2 wms-entry" style="font-size: 11px; color: rgba(160,200,255,0.4);">No services found.</div>');
+            $('#wms-list-container').append('<div class="text-center py-2 wms-entry" style="font-size: 11px; color: var(--color-text-meta);">No services found.</div>');
             return;
         }
         data.forEach(s => {
             const $entry = $(`
-                <div class="wms-entry" style="padding: 8px; border-bottom: 1px solid rgba(26, 62, 122, 0.3); cursor: pointer; transition: background 0.15s;">
-                    <div style="font-size: 12px; font-weight: 600; color: var(--nasa-accent);">${s.label}</div>
-                    <div style="font-size: 10px; color: rgba(160,200,255,0.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${s.url}</div>
-                    <div style="font-size: 9px; color: rgba(160,200,255,0.3); display: flex; justify-content: space-between; margin-top: 4px;">
+                <div class="wms-entry" style="padding: 8px; border-bottom: 1px solid var(--color-border); cursor: pointer; transition: background 0.15s;">
+                    <div style="font-size: 12px; font-weight: 600; color: var(--color-primary);">${s.label}</div>
+                    <div style="font-size: 10px; color: var(--color-text-meta); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${s.url}</div>
+                    <div style="font-size: 9px; color: var(--color-text-meta); opacity: 0.6; display: flex; justify-content: space-between; margin-top: 4px;">
                         <span><i class="fas fa-user me-1"></i>${s.creator}</span>
                         <span><i class="fas fa-calendar-alt me-1"></i>${s.created_at}</span>
                     </div>
@@ -997,7 +1061,7 @@ function loadWMSServices() {
             `);
             $entry.on('click', () => selectExistingWMS(s));
             $entry.hover(
-                function() { $(this).css('background', 'rgba(79, 195, 247, 0.1)'); },
+                function() { $(this).css('background', 'rgba(1, 112, 185, 0.08)'); },
                 function() { $(this).css('background', 'transparent'); }
             );
             $('#wms-list-container').append($entry);
@@ -1074,7 +1138,7 @@ function addWMSLayerToMap(url, layerName, label, id, isUnsaved = false) {
         layers: layerName,
         label: label,
         sublabel: isUnsaved ? 'Custom WMS Layer (Unsaved)' : 'Custom WMS Layer',
-        color: isUnsaved ? '#ffc107' : '#4fc3f7',
+        color: isUnsaved ? '#ffc107' : '#0170B9',
         opacity: 0.85,
         visible: true,
         isWMS: true
@@ -1129,18 +1193,18 @@ const AddWMSControl = L.Control.extend({
     },
     onAdd: function (map) {
         const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-        container.style.backgroundColor = 'var(--nasa-panel)';
+        container.style.backgroundColor = 'var(--color-surface)';
         container.style.width = '34px';
         container.style.height = '34px';
         container.style.display = 'flex';
         container.style.alignItems = 'center';
         container.style.justifyContent = 'center';
         container.style.cursor = 'pointer';
-        container.style.border = '1px solid var(--nasa-border)';
+        container.style.border = '1px solid var(--color-border)';
         container.title = 'Add WMS Layer';
 
         const icon = L.DomUtil.create('i', 'fas fa-plus-circle', container);
-        icon.style.color = 'var(--nasa-accent)';
+        icon.style.color = 'var(--color-primary)';
         icon.style.fontSize = '16px';
 
         container.onclick = function (e) {
@@ -1369,18 +1433,18 @@ const drawControl = new L.Control.Draw({
             allowIntersection: false,
             showArea: true,
             shapeOptions: {
-                color:        '#4fc3f7',
+                color:        '#0170B9',
                 weight:       2,
-                fillColor:    '#4fc3f7',
+                fillColor:    '#0170B9',
                 fillOpacity:  0.12,
                 dashArray:    '4 4',
             },
         },
         rectangle: {
             shapeOptions: {
-                color:       '#4fc3f7',
+                color:       '#0170B9',
                 weight:      2,
-                fillColor:   '#4fc3f7',
+                fillColor:   '#0170B9',
                 fillOpacity: 0.12,
                 dashArray:   '4 4',
             },
@@ -1621,11 +1685,11 @@ function csProcessAndChart(resultData) {
             datasets: [{
                 label:            'Avg Value',
                 data:             values,
-                borderColor:      '#4fc3f7',
-                backgroundColor:  'rgba(79, 195, 247, 0.10)',
+                borderColor:      '#0170B9',
+                backgroundColor:  'rgba(1, 112, 185, 0.10)',
                 borderWidth:      2,
-                pointBackgroundColor: '#fc3d21',
-                pointBorderColor:     '#fc3d21',
+                pointBackgroundColor: '#f64137',
+                pointBorderColor:     '#f64137',
                 pointRadius:      4,
                 pointHoverRadius: 7,
                 tension:          0.35,
@@ -1639,14 +1703,14 @@ function csProcessAndChart(resultData) {
             interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: {
-                    labels: { color: '#c4d8f5', font: { size: 12 }, boxWidth: 14 },
+                    labels: { color: '#3a3a3a', font: { size: 12 }, boxWidth: 14 },
                 },
                 tooltip: {
-                    backgroundColor:  'rgba(10, 17, 34, 0.96)',
-                    borderColor:      '#1a3e7a',
+                    backgroundColor:  '#ffffff',
+                    borderColor:      '#dddddd',
                     borderWidth:      1,
-                    titleColor:       '#4fc3f7',
-                    bodyColor:        '#c4d8f5',
+                    titleColor:       '#0170B9',
+                    bodyColor:        '#3a3a3a',
                     padding:          10,
                     callbacks: {
                         label: ctx => {
@@ -1659,25 +1723,25 @@ function csProcessAndChart(resultData) {
             scales: {
                 x: {
                     ticks: {
-                        color:    '#c4d8f5',
+                        color:    '#58585b',
                         font:     { size: 10 },
                         maxRotation: 45,
                         autoSkip: true,
                         maxTicksLimit: 12,
                     },
-                    grid: { color: 'rgba(26, 62, 122, 0.35)' },
+                    grid: { color: 'rgba(221, 221, 221, 0.8)' },
                 },
                 y: {
                     ticks: {
-                        color: '#c4d8f5',
+                        color: '#58585b',
                         font:  { size: 11 },
                         callback: v => v.toFixed(3),
                     },
-                    grid:  { color: 'rgba(26, 62, 122, 0.35)' },
+                    grid:  { color: 'rgba(221, 221, 221, 0.8)' },
                     title: {
                         display: true,
                         text:    'Average Value',
-                        color:   'rgba(160,200,255,0.55)',
+                        color:   '#58585b',
                         font:    { size: 10 },
                     },
                 },
