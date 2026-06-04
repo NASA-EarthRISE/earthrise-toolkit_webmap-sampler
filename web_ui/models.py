@@ -13,3 +13,15 @@ class WMSService(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class WMSVote(models.Model):
+    VOTE_CHOICES = [('up', 'Thumbs Up'), ('down', 'Thumbs Down')]
+
+    service = models.ForeignKey(WMSService, on_delete=models.CASCADE, related_name='votes')
+    session_key = models.CharField(max_length=40)
+    vote = models.CharField(max_length=4, choices=VOTE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('service', 'session_key')

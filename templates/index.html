@@ -109,6 +109,8 @@
             border-radius: var(--radius);
             z-index: 1500;
             box-shadow: var(--shadow-card);
+            display: flex; flex-direction: column; overflow: hidden;
+            max-height: calc(100vh - var(--header-h) - var(--timeline-h) - 28px);
         }
         #lm-header {
             background: var(--color-dark);
@@ -116,6 +118,7 @@
             padding: 10px 13px;
             display: flex; align-items: center; gap: 8px;
             cursor: pointer; user-select: none;
+            flex-shrink: 0;
         }
         #lm-header .lm-title {
             flex: 1;
@@ -131,7 +134,7 @@
             transition: background 0.15s;
         }
         #lm-collapse-btn:hover { background: rgba(255,255,255,0.15); }
-        #lm-body { padding: 8px; }
+        #lm-body { padding: 8px; overflow-y: auto; flex: 1; }
 
         /* ── Layer Items ── */
         #layer-list {
@@ -193,6 +196,14 @@
         }
         .vis-btn:hover { background: rgba(1,112,185,0.1); }
         .vis-btn.layer-hidden { color: var(--color-border); }
+        .remove-btn {
+            background: transparent; border: none;
+            color: rgba(58,58,58,0.3); font-size: 11px;
+            cursor: pointer; padding: 3px 5px; border-radius: var(--radius);
+            flex-shrink: 0;
+            transition: background 0.15s, color 0.15s;
+        }
+        .remove-btn:hover { background: rgba(246,65,55,0.1); color: var(--color-hover); }
         .layer-row2 { display: flex; align-items: center; gap: 8px; }
         .opacity-icon {
             font-size: 9px; color: var(--color-text-meta); flex-shrink: 0;
@@ -458,6 +469,40 @@
         }
         #cs-chart-canvas-wrap { position: relative; height: 320px; }
 
+        /* ── WMS Time Range Badge ── */
+        .layer-time-range {
+            font-size: 9px;
+            color: var(--color-primary);
+            background: rgba(1,112,185,0.08);
+            border: 1px solid rgba(1,112,185,0.18);
+            border-radius: var(--radius);
+            padding: 1px 6px;
+            margin-top: 4px;
+            display: inline-block;
+            letter-spacing: 0.3px;
+            font-family: var(--font-body);
+        }
+
+        /* ── WMS Vote Buttons ── */
+        .wms-vote-bar {
+            display: flex; align-items: center; gap: 6px;
+            margin-top: 6px;
+        }
+        .wms-vote-btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: transparent;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            padding: 2px 8px;
+            font-family: var(--font-body);
+            font-size: 10px; color: var(--color-text-meta);
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        .wms-vote-btn:hover { background: rgba(1,112,185,0.08); border-color: var(--color-primary); color: var(--color-primary); }
+        .wms-vote-btn.active-up   { background: rgba(1,112,185,0.12); border-color: var(--color-primary); color: var(--color-primary); font-weight: 600; }
+        .wms-vote-btn.active-down { background: rgba(246,65,55,0.10); border-color: var(--color-hover); color: var(--color-hover); font-weight: 600; }
+
         /* ── WMS Modal ── */
         #wmsModal .modal-content {
             background: var(--color-surface);
@@ -536,12 +581,23 @@
             border-top: 1px solid var(--color-border);
             margin: 8px 0 6px;
         }
+        .lm-section-header {
+            display: flex; align-items: center; gap: 6px;
+            cursor: pointer; user-select: none;
+            padding: 2px 2px 4px;
+        }
         .lm-section-title {
+            flex: 1;
             font-family: var(--font-heading);
             font-size: 9px; font-weight: 600;
             letter-spacing: 1.8px; text-transform: uppercase;
-            color: var(--color-text-meta); padding: 0 2px 4px;
+            color: var(--color-text-meta);
         }
+        .lm-section-chevron {
+            font-size: 9px; color: var(--color-text-meta);
+            transition: transform 0.2s;
+        }
+        .lm-section-chevron.collapsed { transform: rotate(-90deg); }
         .basemap-btn {
             width: 100%;
             display: flex; align-items: center; gap: 8px;
@@ -697,13 +753,20 @@
         </button>
     </div>
     <div id="lm-body">
-        <ul id="layer-list"></ul>
-
-        <hr class="lm-divider">
-        <div class="lm-section-title"><i class="fas fa-map me-1"></i>Basemap</div>
+        <!-- Basemap section (top, collapsible) -->
+        <div class="lm-section-header" id="lm-basemap-header" onclick="toggleBasemapSection()">
+            <span class="lm-section-title"><i class="fas fa-map me-1"></i>Basemap</span>
+            <i class="fas fa-chevron-down lm-section-chevron" id="lm-basemap-chevron"></i>
+        </div>
         <div id="basemap-list">
             <!-- populated by buildBasemapUI() -->
         </div>
+
+        <hr class="lm-divider">
+
+        <!-- Layers section -->
+        <div class="lm-section-title" style="padding: 0 2px 4px;"><i class="fas fa-layer-group me-1"></i>Layers</div>
+        <ul id="layer-list"></ul>
     </div>
 </div>
 
@@ -1049,21 +1112,41 @@ function loadWMSServices() {
             return;
         }
         data.forEach(s => {
+            const upActive   = s.user_vote === 'up'   ? 'active-up'   : '';
+            const downActive = s.user_vote === 'down' ? 'active-down' : '';
             const $entry = $(`
-                <div class="wms-entry" style="padding: 8px; border-bottom: 1px solid var(--color-border); cursor: pointer; transition: background 0.15s;">
+                <div class="wms-entry" data-id="${s.id}" style="padding: 8px; border-bottom: 1px solid var(--color-border); cursor: pointer; transition: background 0.15s;">
                     <div style="font-size: 12px; font-weight: 600; color: var(--color-primary);">${s.label}</div>
                     <div style="font-size: 10px; color: var(--color-text-meta); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${s.url}</div>
                     <div style="font-size: 9px; color: var(--color-text-meta); opacity: 0.6; display: flex; justify-content: space-between; margin-top: 4px;">
                         <span><i class="fas fa-user me-1"></i>${s.creator}</span>
                         <span><i class="fas fa-calendar-alt me-1"></i>${s.created_at}</span>
                     </div>
+                    <div class="wms-vote-bar">
+                        <button class="wms-vote-btn ${upActive}" data-id="${s.id}" data-vote="up" title="Helpful">
+                            <i class="fas fa-thumbs-up"></i>
+                            <span class="vote-up-count">${s.thumbs_up}</span>
+                        </button>
+                        <button class="wms-vote-btn ${downActive}" data-id="${s.id}" data-vote="down" title="Not helpful">
+                            <i class="fas fa-thumbs-down"></i>
+                            <span class="vote-down-count">${s.thumbs_down}</span>
+                        </button>
+                    </div>
                 </div>
             `);
-            $entry.on('click', () => selectExistingWMS(s));
+            $entry.on('click', function(e) {
+                if (!$(e.target).closest('.wms-vote-btn').length) {
+                    selectExistingWMS(s);
+                }
+            });
             $entry.hover(
                 function() { $(this).css('background', 'rgba(1, 112, 185, 0.08)'); },
                 function() { $(this).css('background', 'transparent'); }
             );
+            $entry.find('.wms-vote-btn').on('click', function(e) {
+                e.stopPropagation();
+                voteWMS($(this).data('id'), $(this).data('vote'), $(this).closest('.wms-entry'));
+            });
             $('#wms-list-container').append($entry);
         });
     });
@@ -1074,6 +1157,26 @@ function selectExistingWMS(service) {
     $('#wms-layer').val(service.layers);
     $('#wms-label').val(service.label);
     $('#selected-wms-id').val(service.id);
+}
+
+function voteWMS(serviceId, vote, $entry) {
+    fetch(`/api/wms/${serviceId}/vote/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ vote })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) return;
+        $entry.find('.vote-up-count').text(data.thumbs_up);
+        $entry.find('.vote-down-count').text(data.thumbs_down);
+        $entry.find('[data-vote="up"]').toggleClass('active-up', data.user_vote === 'up');
+        $entry.find('[data-vote="down"]').toggleClass('active-down', data.user_vote === 'down');
+    })
+    .catch(err => console.error('Vote error:', err));
 }
 
 // Clear selected ID if user types in any input
@@ -1161,13 +1264,40 @@ function addWMSLayerToMap(url, layerName, label, id, isUnsaved = false) {
 
     buildLayerUI();
     enforceZOrder();
-    
+
+    // Fetch TIME dimension from GetCapabilities and update the sublabel
+    fetchWMSTimeDimension(url, layerName, newDef);
+
     $('#wmsModal').modal('hide');
     // Clear inputs
     $('#wms-url').val('');
     $('#wms-layer').val('');
     $('#wms-label').val('');
     $('#selected-wms-id').val('');
+}
+
+function fetchWMSTimeDimension(url, layerName, def) {
+    const params = new URLSearchParams({ url, layer: layerName });
+    fetch('/api/wms/time/?' + params)
+        .then(r => r.json())
+        .then(data => {
+            if (data.start || data.end || data.time_extent) {
+                let rangeText = 'Custom WMS Layer';
+                if (data.start && data.end) {
+                    rangeText = `${data.start} – ${data.end}`;
+                } else if (data.time_extent) {
+                    rangeText = data.time_extent.length > 40
+                        ? data.time_extent.slice(0, 40) + '…'
+                        : data.time_extent;
+                }
+                def.sublabel = rangeText;
+                def.timeExtent = data.time_extent || null;
+                def.timeStart  = data.start || null;
+                def.timeEnd    = data.end   || null;
+                buildLayerUI();
+            }
+        })
+        .catch(() => { /* silently ignore — sublabel stays as default */ });
 }
 
 // Helper for CSRF
@@ -1229,6 +1359,10 @@ function buildLayerUI() {
         const eyeIcon  = def.visible ? 'fa-eye' : 'fa-eye-slash';
         const hiddenCls = def.visible ? '' : 'layer-hidden';
 
+        const timeRangeBadge = (def.timeStart || def.timeEnd)
+            ? `<span class="layer-time-range"><i class="fas fa-clock" style="font-size:8px;margin-right:3px;"></i>${def.timeStart || '?'} – ${def.timeEnd || '?'}</span>`
+            : '';
+
         const $li = $(`
             <li class="layer-item" data-id="${def.id}">
                 <div class="layer-row1">
@@ -1239,10 +1373,14 @@ function buildLayerUI() {
                     <span class="layer-label">
                         ${def.label}
                         <small>${def.sublabel}</small>
+                        ${timeRangeBadge}
                     </span>
                     <button class="vis-btn ${hiddenCls}" title="Toggle visibility"
                             data-id="${def.id}">
                         <i class="fas ${eyeIcon}"></i>
+                    </button>
+                    <button class="remove-btn" title="Remove layer" data-id="${def.id}">
+                        <i class="fas fa-xmark"></i>
                     </button>
                 </div>
                 <div class="layer-row2">
@@ -1261,6 +1399,12 @@ function buildLayerUI() {
     $list.off('click.vis').on('click.vis', '.vis-btn', function (e) {
         e.stopPropagation();
         toggleVisibility($(this).data('id'));
+    });
+
+    // Delegated event – remove layer
+    $list.off('click.remove').on('click.remove', '.remove-btn', function (e) {
+        e.stopPropagation();
+        removeLayer($(this).data('id'));
     });
 
     // Delegated event – opacity slider
@@ -1288,6 +1432,32 @@ function toggleLayerManager() {
         $body.slideDown(200);
         $icon.removeClass('fa-plus').addClass('fa-minus');
     }
+}
+
+let basemapSectionCollapsed = false;
+
+function toggleBasemapSection() {
+    basemapSectionCollapsed = !basemapSectionCollapsed;
+    const $chevron = $('#lm-basemap-chevron');
+    if (basemapSectionCollapsed) {
+        $('#basemap-list').slideUp(180);
+        $chevron.addClass('collapsed');
+    } else {
+        $('#basemap-list').slideDown(180);
+        $chevron.removeClass('collapsed');
+    }
+}
+
+function removeLayer(id) {
+    const idx = LAYER_DEFS.findIndex(d => d.id === id);
+    if (idx === -1) return;
+    const lyr = leafletLayers[id];
+    if (lyr) {
+        lyr.remove();
+        delete leafletLayers[id];
+    }
+    LAYER_DEFS.splice(idx, 1);
+    buildLayerUI();
 }
 
 function toggleVisibility(id) {
