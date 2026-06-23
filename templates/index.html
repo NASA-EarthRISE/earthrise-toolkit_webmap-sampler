@@ -504,10 +504,14 @@
         .wms-vote-btn.active-down { background: rgba(246,65,55,0.10); border-color: var(--color-hover); color: var(--color-hover); font-weight: 600; }
 
         /* ── WMS Modal ── */
+        #wmsModal { z-index: 2500; }
+        #wmsModal + .modal-backdrop,
+        .modal-backdrop { z-index: 2400; }
         #wmsModal .modal-content {
             background: var(--color-surface);
             border: 1px solid var(--color-border);
             border-radius: var(--radius);
+            max-height: calc(100vh - 3.5rem);
         }
         #wmsModal .modal-header {
             background: var(--color-dark);
@@ -696,7 +700,7 @@
 
 <!-- ── Add WMS Modal ── -->
 <div class="modal fade" id="wmsModal" tabindex="-1" aria-labelledby="wmsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="wmsModalLabel">
@@ -810,9 +814,9 @@
         </select>
     </div>
     <div class="tl-row2">
-        <span class="tl-range-label">Jan 2015</span>
+        <span class="tl-range-label" id="tl-range-start">Jan 2015</span>
         <input type="range" id="timeline-slider" min="0" max="3650" value="3519">
-        <span class="tl-range-label">Dec 2024</span>
+        <span class="tl-range-label" id="tl-range-end">Dec 2024</span>
     </div>
 </div>
 
@@ -831,10 +835,12 @@ Chart.defaults.font.family = "'Public Sans', sans-serif";
 /* ═══════════════════════════════════════════════════════════
    Configuration
 ═══════════════════════════════════════════════════════════ */
-const RANGE_START  = new Date('2015-01-01T00:00:00Z');
-const RANGE_END    = new Date('2024-12-31T00:00:00Z');
-const TOTAL_DAYS   = Math.round((RANGE_END - RANGE_START) / 86400000);
-let   currentDate  = new Date('2024-08-21T00:00:00Z');
+const DEFAULT_START = new Date('2015-01-01T00:00:00Z');
+const DEFAULT_END   = new Date('2024-12-31T00:00:00Z');
+let   RANGE_START   = new Date(DEFAULT_START);
+let   RANGE_END     = new Date(DEFAULT_END);
+let   TOTAL_DAYS    = Math.round((RANGE_END - RANGE_START) / 86400000);
+let   currentDate   = new Date('2024-08-21T00:00:00Z');
 
 // Layer definitions – order = visual stack order (index 0 = topmost)
 const LAYER_DEFS = [
@@ -897,6 +903,41 @@ function dateToSlider(date) {
 
 function sliderToDate(val) {
     return new Date(RANGE_START.getTime() + val * 86400000);
+}
+
+function recalcSliderRange() {
+    // Collect all layer time bounds; fall back to defaults when a layer has no time metadata
+    let minMs = DEFAULT_START.getTime();
+    let maxMs = DEFAULT_END.getTime();
+    let hasAny = false;
+
+    LAYER_DEFS.forEach(def => {
+        if (def.timeStart) {
+            const t = new Date(def.timeStart).getTime();
+            if (!isNaN(t)) { if (!hasAny || t < minMs) minMs = t; hasAny = true; }
+        }
+        if (def.timeEnd) {
+            const t = new Date(def.timeEnd).getTime();
+            if (!isNaN(t)) { if (!hasAny || t > maxMs) maxMs = t; hasAny = true; }
+        }
+    });
+
+    if (!hasAny) { minMs = DEFAULT_START.getTime(); maxMs = DEFAULT_END.getTime(); }
+
+    RANGE_START = new Date(minMs);
+    RANGE_END   = new Date(maxMs);
+    TOTAL_DAYS  = Math.round((maxMs - minMs) / 86400000);
+
+    const $slider = $('#timeline-slider');
+    $slider.attr('min', 0).attr('max', TOTAL_DAYS);
+    $slider.val(dateToSlider(clampDate(currentDate)));
+
+    // Update range labels
+    const fmt = d => d.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+    $('#tl-range-start').text(fmt(RANGE_START));
+    $('#tl-range-end').text(fmt(RANGE_END));
+
+    applyDate(currentDate);
 }
 
 
@@ -1295,6 +1336,7 @@ function fetchWMSTimeDimension(url, layerName, def) {
                 def.timeStart  = data.start || null;
                 def.timeEnd    = data.end   || null;
                 buildLayerUI();
+                recalcSliderRange();
             }
         })
         .catch(() => { /* silently ignore — sublabel stays as default */ });
@@ -1458,6 +1500,7 @@ function removeLayer(id) {
     }
     LAYER_DEFS.splice(idx, 1);
     buildLayerUI();
+    recalcSliderRange();
 }
 
 function toggleVisibility(id) {
