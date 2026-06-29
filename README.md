@@ -1,10 +1,10 @@
-# EarthRISE Air Quality Sampler
+# EarthRISE web map Sampler
 
 [![Python: 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![EarthRISE: Development](https://img.shields.io/badge/EarthRISE-Development-b50000?labelColor=191f4c)](https://appliedsciences.nasa.gov/what-we-do/capacity-building/develop)
 
-EarthRISE Air Quality Sampler is a Django-based web application designed to visualize and analyze air quality data using NASA's GIBS (Global Imagery Browse Services) and ClimateSERV API. The application provides an interactive map interface for monitoring atmospheric parameters over time.
+EarthRISE Webmap Sampler is a Django-based web application designed to visualize and analyze air quality data using NASA's GIBS (Global Imagery Browse Services) and ClimateSERV API. The application provides an interactive map interface for monitoring atmospheric parameters over time.
 
 ## Features
 
@@ -27,8 +27,8 @@ Choose one of the following methods to set up your development environment.
 
 1. **Clone the repository**:
    ```bash
-   git clone git@github.com:NASA-EarthRISE/toolkit_Air-Quality-Sampler.git
-   cd toolkit_Air-Quality-Sampler
+   git clone git@github.com:NASA-EarthRISE/earthrise-toolkit_webmap-sampler.git
+   cd earthrise-toolkit_webmap-sampler
    ```
 
 2. **Create a virtual environment**:
@@ -55,18 +55,18 @@ Choose one of the following methods to set up your development environment.
 
 1. **Clone the repository**:
    ```bash
-   git clone git@github.com:NASA-EarthRISE/toolkit_Air-Quality-Sampler.git
-   cd toolkit_Air-Quality-Sampler
+   git clone git@github.com:NASA-EarthRISE/earthrise-toolkit_webmap-sampler.git
+   cd earthrise-toolkit_webmap-sampler
    ```
 
 2. **Create a conda environment**:
    ```bash
-   conda create -n air_quality python=3.13
+   conda create -n webmap-sampler python=3.13
    ```
 
 3. **Activate the environment**:
    ```bash
-   conda activate air_quality
+   conda activate webmap-sampler
    ```
 
 4. **Install dependencies**:
@@ -93,7 +93,7 @@ Once your environment is set up and dependencies are installed:
 
 ## Project Structure
 
-- `air_quality_sampler/`: Project configuration and settings.
+- `webmap_sampler/`: Project configuration and settings.
 - `web_ui/`: Main application logic and views.
 - `templates/`: HTML templates (including the main NASA-themed dashboard).
 - `manage.py`: Django management script.
