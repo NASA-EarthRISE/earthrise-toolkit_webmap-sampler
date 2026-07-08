@@ -1,4 +1,4 @@
-# EarthRISE web map Sampler
+# EarthRISE Webmap Sampler
 
 [![Python: 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
