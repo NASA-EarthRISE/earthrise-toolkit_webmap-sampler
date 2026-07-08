@@ -128,3 +128,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = f"{SCRIPT_NAME}/static/"
+STATIC_ROOT = "/earthrise_apps/earthrise-toolkit_webmap-sampler/staticfiles/"
