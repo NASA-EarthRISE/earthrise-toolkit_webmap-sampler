@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count, Q
+from django.conf import settings
 from .models import WMSService, WMSVote
 import json
 import urllib.request
@@ -9,7 +10,7 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 
 def home(request):
-    return render(request, 'index.html')
+    return render(request, 'index.html', {'script_name': settings.SCRIPT_NAME})
 
 def _ensure_session(request):
     if not request.session.session_key:

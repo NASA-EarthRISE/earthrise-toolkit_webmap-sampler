@@ -829,6 +829,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
+/* Base path for API calls — empty in dev, set to the proxy prefix in production */
+const SCRIPT_NAME = "{{ script_name }}";
+
 /* ── Chart.js global defaults (Horizon typography) ── */
 Chart.defaults.font.family = "'Public Sans', sans-serif";
 
@@ -1146,7 +1149,7 @@ function loadWMSServices() {
     $('#wms-loader').show();
     $('#wms-list-container').find('.wms-entry').remove();
 
-    $.getJSON('/api/wms/', function(data) {
+    $.getJSON(SCRIPT_NAME + '/api/wms/', function(data) {
         $('#wms-loader').hide();
         if (data.length === 0) {
             $('#wms-list-container').append('<div class="text-center py-2 wms-entry" style="font-size: 11px; color: var(--color-text-meta);">No services found.</div>');
@@ -1201,7 +1204,7 @@ function selectExistingWMS(service) {
 }
 
 function voteWMS(serviceId, vote, $entry) {
-    fetch(`/api/wms/${serviceId}/vote/`, {
+    fetch(SCRIPT_NAME + `/api/wms/${serviceId}/vote/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1255,7 +1258,7 @@ function addWMSLayer() {
         label: label
     };
 
-    fetch('/api/wms/save/', {
+    fetch(SCRIPT_NAME + '/api/wms/save/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1319,7 +1322,7 @@ function addWMSLayerToMap(url, layerName, label, id, isUnsaved = false) {
 
 function fetchWMSTimeDimension(url, layerName, def) {
     const params = new URLSearchParams({ url, layer: layerName });
-    fetch('/api/wms/time/?' + params)
+    fetch(SCRIPT_NAME + '/api/wms/time/?' + params)
         .then(r => r.json())
         .then(data => {
             if (data.start || data.end || data.time_extent) {
