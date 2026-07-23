@@ -630,23 +630,94 @@
             color: #fff; border-radius: var(--radius); padding: 1px 4px;
             letter-spacing: 0.5px; margin-left: 4px; vertical-align: middle;
         }
+
+        /* ── Screen-reader-only utility ── */
+        .sr-only {
+            position: absolute;
+            width: 1px; height: 1px;
+            padding: 0; margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap; border: 0;
+        }
+
+        /* ── Skip navigation link ── */
+        .skip-link {
+            position: absolute;
+            left: -9999px; top: -9999px;
+            z-index: 9999;
+            background: var(--color-surface);
+            color: var(--color-primary);
+            border: 2px solid var(--color-primary);
+            border-radius: var(--radius);
+            padding: 8px 18px;
+            font-family: var(--font-body);
+            font-size: 14px; font-weight: 600;
+            text-decoration: none; white-space: nowrap;
+        }
+        .skip-link:focus {
+            left: 50%;
+            top: calc(var(--header-h) + 10px);
+            transform: translateX(-50%);
+        }
+
+        /* ── WCAG 2.2 focus appearance ── */
+        :focus-visible {
+            outline: 2px solid var(--color-primary) !important;
+            outline-offset: 2px !important;
+        }
+        .tl-btn:focus-visible,
+        .vis-btn:focus-visible,
+        .remove-btn:focus-visible,
+        #lm-collapse-btn:focus-visible,
+        .basemap-btn:focus-visible,
+        .wms-vote-btn:focus-visible {
+            outline: 2px solid var(--color-primary) !important;
+            outline-offset: 2px !important;
+        }
+
+        /* ── Explicit contrast for lm-header title (helps AT compute ratio) ── */
+        #lm-header {
+            background-color: #2e2e32;
+        }
+        #lm-header .lm-title {
+            color: #ffffff;
+        }
+
+        /* ── Layer swatch: ensure foreground colour present alongside inline bg ── */
+        .layer-swatch {
+            color: transparent;
+        }
+
+        /* ── Keyboard-accessible section headers ── */
+        #lm-header[role="button"]:focus-visible,
+        #lm-basemap-header[role="button"]:focus-visible {
+            outline: 2px solid var(--color-primary) !important;
+            outline-offset: 1px !important;
+        }
     </style>
 </head>
 <body>
+
+<!-- ── Skip navigation ── -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <!-- ── Header ── -->
 <header id="nasa-header">
     <div class="nasa-logo">Earth<span>RISE</span></div>
     <div class="app-title">Air Quality Sampler &mdash; Earth Observing System</div>
-    <div id="header-date-badge">2024-08-21</div>
+    <div id="header-date-badge" aria-live="polite" aria-atomic="true">2024-08-21</div>
 </header>
 
+<!-- ── Main application area ── -->
+<main id="main-content">
+
 <!-- ── Map ── -->
-<div id="map"></div>
+<div id="map" role="application" aria-label="Interactive air quality map. Use arrow keys to pan, plus and minus to zoom."></div>
 
 <!-- ── Loading Badge ── -->
-<div id="loading-badge">
-    <i class="fas fa-circle-notch fa-spin me-1"></i> Loading tiles&hellip;
+<div id="loading-badge" role="status" aria-live="polite" aria-atomic="true">
+    <i class="fas fa-circle-notch fa-spin me-1" aria-hidden="true"></i> Loading tiles&hellip;
 </div>
 
 <!-- ── ClimateSERV Modal ── -->
@@ -749,18 +820,24 @@
 </div>
 
 <!-- ── Layer Manager ── -->
-<div id="layer-manager">
+<div id="layer-manager" role="complementary" aria-label="Layer Manager">
+    <!-- lm-header: mouse-clickable for convenience; keyboard users use lm-collapse-btn -->
     <div id="lm-header" onclick="toggleLayerManager()">
-        <span class="lm-title"><i class="fas fa-layer-group me-2"></i>Layer Manager</span>
-        <button id="lm-collapse-btn" title="Toggle panel">
-            <i class="fas fa-minus"></i>
+        <span class="lm-title"><i class="fas fa-layer-group me-2" aria-hidden="true"></i>Layer Manager</span>
+        <button id="lm-collapse-btn" title="Collapse panel"
+                aria-label="Collapse Layer Manager panel"
+                aria-expanded="true" aria-controls="lm-body"
+                onclick="event.stopPropagation(); toggleLayerManager();">
+            <i class="fas fa-minus" aria-hidden="true"></i>
         </button>
     </div>
     <div id="lm-body">
         <!-- Basemap section (top, collapsible) -->
-        <div class="lm-section-header" id="lm-basemap-header" onclick="toggleBasemapSection()">
-            <span class="lm-section-title"><i class="fas fa-map me-1"></i>Basemap</span>
-            <i class="fas fa-chevron-down lm-section-chevron" id="lm-basemap-chevron"></i>
+        <div class="lm-section-header" id="lm-basemap-header" onclick="toggleBasemapSection()"
+             role="button" tabindex="0" aria-expanded="true" aria-controls="basemap-list"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleBasemapSection();}">
+            <span class="lm-section-title"><i class="fas fa-map me-1" aria-hidden="true"></i>Basemap</span>
+            <i class="fas fa-chevron-down lm-section-chevron" id="lm-basemap-chevron" aria-hidden="true"></i>
         </div>
         <div id="basemap-list">
             <!-- populated by buildBasemapUI() -->
@@ -775,38 +852,39 @@
 </div>
 
 <!-- ── Timeline ── -->
-<div id="timeline">
+<div id="timeline" role="region" aria-label="Timeline date controls">
     <div class="tl-row1">
-        <button class="tl-btn" onclick="stepDate(-365)" title="Back 1 year">
-            <i class="fas fa-backward-fast"></i>
+        <button class="tl-btn" onclick="stepDate(-365)" title="Back 1 year" aria-label="Back 1 year">
+            <i class="fas fa-backward-fast" aria-hidden="true"></i>
         </button>
-        <button class="tl-btn" onclick="stepDate(-30)" title="Back 1 month">
-            <i class="fas fa-backward-step"></i>
+        <button class="tl-btn" onclick="stepDate(-30)" title="Back 1 month" aria-label="Back 1 month">
+            <i class="fas fa-backward-step" aria-hidden="true"></i>
         </button>
-        <button class="tl-btn" onclick="stepDate(-1)" title="Back 1 day">
-            <i class="fas fa-backward"></i>
+        <button class="tl-btn" onclick="stepDate(-1)" title="Back 1 day" aria-label="Back 1 day">
+            <i class="fas fa-backward" aria-hidden="true"></i>
         </button>
-        <button class="tl-btn" id="play-btn" onclick="togglePlay()" title="Play / Pause">
-            <i class="fas fa-play"></i>
+        <button class="tl-btn" id="play-btn" onclick="togglePlay()" title="Play / Pause" aria-label="Play animation" aria-pressed="false">
+            <i class="fas fa-play" aria-hidden="true"></i>
         </button>
-        <button class="tl-btn" onclick="stepDate(1)" title="Forward 1 day">
-            <i class="fas fa-forward"></i>
+        <button class="tl-btn" onclick="stepDate(1)" title="Forward 1 day" aria-label="Forward 1 day">
+            <i class="fas fa-forward" aria-hidden="true"></i>
         </button>
-        <button class="tl-btn" onclick="stepDate(30)" title="Forward 1 month">
-            <i class="fas fa-forward-step"></i>
+        <button class="tl-btn" onclick="stepDate(30)" title="Forward 1 month" aria-label="Forward 1 month">
+            <i class="fas fa-forward-step" aria-hidden="true"></i>
         </button>
-        <button class="tl-btn" onclick="stepDate(365)" title="Forward 1 year">
-            <i class="fas fa-forward-fast"></i>
+        <button class="tl-btn" onclick="stepDate(365)" title="Forward 1 year" aria-label="Forward 1 year">
+            <i class="fas fa-forward-fast" aria-hidden="true"></i>
         </button>
 
-        <div id="current-date-display">2024-08-21</div>
+        <div id="current-date-display" aria-live="polite" aria-atomic="true">2024-08-21</div>
+        <label for="date-picker" class="sr-only">Select map date</label>
         <input type="date" id="date-picker" value="2024-08-21"
-               min="2015-01-01" max="2024-12-31">
+               min="2015-01-01" max="2024-12-31" aria-label="Select map date">
         <div class="tl-spacer"></div>
-        <label class="tl-speed-label">
+        <label class="tl-speed-label" for="speed-select">
             SPEED
         </label>
-        <select id="speed-select">
+        <select id="speed-select" aria-label="Animation playback speed">
             <option value="2000">0.5×</option>
             <option value="1000" selected>1×</option>
             <option value="500">2×</option>
@@ -815,10 +893,14 @@
     </div>
     <div class="tl-row2">
         <span class="tl-range-label" id="tl-range-start">Jan 2015</span>
-        <input type="range" id="timeline-slider" min="0" max="3650" value="3519">
+        <label for="timeline-slider" class="sr-only">Timeline position</label>
+        <input type="range" id="timeline-slider" min="0" max="3650" value="3519"
+               aria-label="Timeline date position" aria-valuetext="2024-08-21">
         <span class="tl-range-label" id="tl-range-end">Dec 2024</span>
     </div>
 </div>
+
+</main><!-- /main#main-content -->
 
 <!-- ── Scripts ── -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -1378,14 +1460,20 @@ const AddWMSControl = L.Control.extend({
         container.style.border = '1px solid var(--color-border)';
         container.title = 'Add WMS Layer';
 
+        container.setAttribute('role', 'button');
+        container.setAttribute('aria-label', 'Add WMS Layer');
+
         const icon = L.DomUtil.create('i', 'fas fa-plus-circle', container);
-        icon.style.color = 'var(--color-primary)';
+        icon.style.color = '#0170B9';           /* explicit hex — no CSS var */
+        icon.style.backgroundColor = 'transparent';
         icon.style.fontSize = '16px';
+        icon.setAttribute('aria-hidden', 'true');
 
         container.onclick = function (e) {
             L.DomEvent.stopPropagation(e);
             $('#wmsModal').modal('show');
         };
+        L.DomEvent.disableClickPropagation(container);
 
         return container;
     }
@@ -1411,29 +1499,37 @@ function buildLayerUI() {
         const $li = $(`
             <li class="layer-item" data-id="${def.id}">
                 <div class="layer-row1">
-                    <span class="drag-handle" title="Drag to reorder">
-                        <i class="fas fa-grip-vertical"></i>
+                    <span class="drag-handle" title="Drag to reorder" aria-hidden="true">
+                        <i class="fas fa-grip-vertical" aria-hidden="true"></i>
                     </span>
-                    <span class="layer-swatch" style="background:${def.color};"></span>
-                    <span class="layer-label">
+                    <span class="layer-swatch" style="background:${def.color}; color: transparent;" role="presentation" aria-hidden="true"></span>
+                    <span class="layer-label" id="layer-label-${def.id}">
                         ${def.label}
                         <small>${def.sublabel}</small>
                         ${timeRangeBadge}
                     </span>
-                    <button class="vis-btn ${hiddenCls}" title="Toggle visibility"
+                    <button class="vis-btn ${hiddenCls}" title="Toggle ${def.label} visibility"
+                            aria-label="Toggle ${def.label} layer visibility"
+                            aria-pressed="${def.visible}"
                             data-id="${def.id}">
-                        <i class="fas ${eyeIcon}"></i>
+                        <i class="fas ${eyeIcon}" aria-hidden="true"></i>
                     </button>
-                    <button class="remove-btn" title="Remove layer" data-id="${def.id}">
-                        <i class="fas fa-xmark"></i>
+                    <button class="remove-btn" title="Remove ${def.label} layer"
+                            aria-label="Remove ${def.label} layer"
+                            data-id="${def.id}">
+                        <i class="fas fa-xmark" aria-hidden="true"></i>
                     </button>
                 </div>
                 <div class="layer-row2">
-                    <i class="fas fa-circle-half-stroke opacity-icon"></i>
+                    <i class="fas fa-circle-half-stroke opacity-icon" aria-hidden="true"></i>
+                    <label for="opacity-${def.id}" class="sr-only">${def.label} layer opacity</label>
                     <input type="range" class="opacity-slider"
+                           id="opacity-${def.id}"
                            min="0" max="100" value="${pct}"
-                           data-id="${def.id}">
-                    <span class="opacity-pct" id="pct-${def.id}">${pct}%</span>
+                           data-id="${def.id}"
+                           aria-label="${def.label} layer opacity"
+                           aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">
+                    <span class="opacity-pct" id="pct-${def.id}" aria-live="polite">${pct}%</span>
                 </div>
             </li>
         `);
@@ -1470,12 +1566,15 @@ function buildLayerUI() {
 function toggleLayerManager() {
     const $body = $('#lm-body');
     const $icon = $('#lm-collapse-btn i');
+    const $btn  = $('#lm-collapse-btn');
     if ($body.is(':visible')) {
         $body.slideUp(200);
         $icon.removeClass('fa-minus').addClass('fa-plus');
+        $btn.attr('aria-expanded', 'false').attr('aria-label', 'Expand Layer Manager panel');
     } else {
         $body.slideDown(200);
         $icon.removeClass('fa-plus').addClass('fa-minus');
+        $btn.attr('aria-expanded', 'true').attr('aria-label', 'Collapse Layer Manager panel');
     }
 }
 
@@ -1484,12 +1583,15 @@ let basemapSectionCollapsed = false;
 function toggleBasemapSection() {
     basemapSectionCollapsed = !basemapSectionCollapsed;
     const $chevron = $('#lm-basemap-chevron');
+    const $header  = $('#lm-basemap-header');
     if (basemapSectionCollapsed) {
         $('#basemap-list').slideUp(180);
         $chevron.addClass('collapsed');
+        $header.attr('aria-expanded', 'false');
     } else {
         $('#basemap-list').slideDown(180);
         $chevron.removeClass('collapsed');
+        $header.attr('aria-expanded', 'true');
     }
 }
 
@@ -1598,10 +1700,16 @@ function togglePlay() {
     playing = !playing;
     const $btn = $('#play-btn');
     if (playing) {
-        $btn.html('<i class="fas fa-pause"></i>').addClass('playing');
+        $btn.html('<i class="fas fa-pause" aria-hidden="true"></i>')
+            .addClass('playing')
+            .attr('aria-pressed', 'true')
+            .attr('aria-label', 'Pause animation');
         startPlay();
     } else {
-        $btn.html('<i class="fas fa-play"></i>').removeClass('playing');
+        $btn.html('<i class="fas fa-play" aria-hidden="true"></i>')
+            .removeClass('playing')
+            .attr('aria-pressed', 'false')
+            .attr('aria-label', 'Play animation');
         stopPlay();
     }
 }
@@ -1973,12 +2081,51 @@ function csProcessAndChart(resultData) {
 
 
 /* ═══════════════════════════════════════════════════════════
+   Accessibility helpers – timeline slider valuetext
+═══════════════════════════════════════════════════════════ */
+$('#timeline-slider').on('input change', function () {
+    const d = sliderToDate(+this.value);
+    $(this).attr('aria-valuetext', toDisplayDate(d));
+});
+
+/* ═══════════════════════════════════════════════════════════
+   Accessibility helpers – Leaflet toolbar semantic roles
+   (patched post-render because Leaflet owns the DOM)
+═══════════════════════════════════════════════════════════ */
+function patchLeafletA11y() {
+    // Draw toolbars
+    document.querySelectorAll('.leaflet-draw-toolbar').forEach(function (toolbar) {
+        toolbar.setAttribute('role', 'group');
+        toolbar.setAttribute('aria-label',
+            toolbar.classList.contains('leaflet-draw-toolbar-top') ? 'Drawing tools' : 'Edit tools');
+        toolbar.querySelectorAll('a').forEach(function (link) {
+            if (!link.getAttribute('role')) link.setAttribute('role', 'button');
+        });
+    });
+    // Zoom control
+    var zoom = document.querySelector('.leaflet-control-zoom');
+    if (zoom) {
+        zoom.setAttribute('role', 'group');
+        zoom.setAttribute('aria-label', 'Zoom controls');
+    }
+    // Attribution — use role="note" (contentinfo must be top-level)
+    var attr = document.querySelector('.leaflet-control-attribution');
+    if (attr) {
+        attr.setAttribute('role', 'note');
+        attr.setAttribute('aria-label', 'Map attribution');
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
    Boot
 ═══════════════════════════════════════════════════════════ */
 initDataLayers();
 buildLayerUI();
 selectBasemap('bluemarble');   // safe here: leafletLayers is initialised above
 applyDate(currentDate);
+
+// Run after Leaflet has rendered its controls
+setTimeout(patchLeafletA11y, 200);
 </script>
 
 </body>
