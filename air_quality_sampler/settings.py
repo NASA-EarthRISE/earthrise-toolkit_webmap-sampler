@@ -129,3 +129,8 @@ USE_TZ = True
 
 STATIC_URL = f"{SCRIPT_NAME}/static/"
 STATIC_ROOT = "/earthrise_apps/earthrise-toolkit_webmap-sampler/staticfiles/"
+
+STATICFILES_DIRS = [
+    BASE_DIR / "static",  # your regular static files
+    BASE_DIR / "node_modules",  # node modules
+]
