@@ -50,6 +50,12 @@ Choose one of the following methods to set up your development environment.
    ```bash
    pip install django
    ```
+   
+5. **Install front-end dependencies**
+
+```bash
+npm install @nasa-hds/core @uswds/uswds
+```
 
 ### Option 2: Using `conda`
 
@@ -73,6 +79,12 @@ Choose one of the following methods to set up your development environment.
    ```bash
    conda install django
    ```
+   
+5. **Install front-end dependencies**
+
+```bash
+npm install @nasa-hds/core @uswds/uswds
+```
 
 ## Running the Application
 
