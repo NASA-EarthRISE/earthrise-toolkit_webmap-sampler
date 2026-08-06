@@ -1,26 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-{#<!DOCTYPE html>#}
-{#<html lang="en">#}
-{#<head>#}
-{#    <meta charset="UTF-8">#}
-{#    <meta name="viewport" content="width=device-width, initial-scale=1.0">#}
-{#    <title>EarthRISE Air Quality Sampler</title>#}
-{#    <link rel="preconnect" href="https://fonts.googleapis.com">#}
-{#    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>#}
-{#    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">#}
-{##}
-{#    <!-- Bootstrap CSS -->#}
-{#    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">#}
-{#    <!-- Leaflet CSS -->#}
-{#    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">#}
-{#    <!-- jQuery UI CSS -->#}
-{#    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/dark-hive/jquery-ui.css">#}
-{#    <!-- Font Awesome -->#}
-{#    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">#}
-{#    <!-- Leaflet Draw -->#}
-{#    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">#}
-{##}
+
 {% block extra_head %}
     <!-- Map dependencies -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
@@ -31,2183 +11,256 @@
     <style>
         /* ── Horizon Design System tokens ── */
         :root {
-            --color-primary:   #0170B9;
-            --color-action:    #1c67e3;
-            --color-hover:     #f64137;
-            --color-dark:      #2e2e32;
-            --color-text:      #3a3a3a;
+            --color-primary: #0170B9;
+            --color-action: #1c67e3;
+            --color-hover: #f64137;
+            --color-dark: #2e2e32;
+            --color-text: #3a3a3a;
             --color-text-meta: #58585b;
-            --color-bg:        #F5F5F5;
-            --color-surface:   #FFFFFF;
-            --color-border:    #dddddd;
-            --color-focus:     #444447;
-            --radius:          4px;
-            --shadow-card:     0px 0px 4px 0 rgba(0,0,0,0.34);
-            --shadow-menu:     0px 4px 10px -2px rgba(0,0,0,0.1);
-            --font-body:       'Public Sans', sans-serif;
-            --font-heading:    'Inter', sans-serif;
-            --header-h:        118px;
-            --timeline-h:      90px;
-            --identifier-h:    56px;
+            --color-bg: #F5F5F5;
+            --color-surface: #FFFFFF;
+            --color-border: #dddddd;
+            --color-focus: #444447;
+            --radius: 4px;
+            --shadow-card: 0px 0px 4px 0 rgba(0, 0, 0, 0.34);
+            --shadow-menu: 0px 4px 10px -2px rgba(0, 0, 0, 0.1);
+            --font-body: 'Public Sans', sans-serif;
+            --font-heading: 'Inter', sans-serif;
+            --header-h: 118px;
+            --timeline-h: 90px;
+            --identifier-h: 56px;
         }
 
-        *, *::before, *::after { box-sizing: border-box; }
-
-        html, body {
-            margin: 0; padding: 0;
-            height: 100%; overflow: hidden;
-            background: #050a14;
-            font-family: var(--font-body);
-            color: var(--color-text);
-            font-size: 16px;
-            line-height: 1.65em;
-        }
-
-        /* ── Header ── */
-        #nasa-header {
-            position: fixed; top: 0; left: 0; right: 0;
-            height: var(--header-h);
-            background: var(--color-dark);
-            border-bottom: none;
-            display: flex; align-items: center; gap: 14px;
-            padding: 0 18px;
-            z-index: 2000;
-            box-shadow: var(--shadow-menu);
-        }
-        .usa-logo a {
-            color: #000!important;
-            text-decoration: none!important;
-            white-space: nowrap;
-        }
-        .usa-menu-btn{
-            display:none;
-        }
-        .usa-banner__header-text{
-            margin-bottom: 0!important;
-        }
-        .usa-banner__button{
-            margin-left: .5rem!important;
-        }
-        .usa-link, .usa-link:active, .usa-link:hover, .usa-link:visited {
-            color: var(--hds-palette-link-text, #17171b)!important;
-        }
-        .usa-link {
-            text-decoration: none!important;
-            box-decoration-break: clone!important;
-        }
-        .nasa-logo {
-            font-family: var(--font-heading);
-            font-size: 20px; font-weight: 700;
-            color: #fff; letter-spacing: 3px;
-        }
-        .nasa-logo span { color: var(--color-hover); }
-        .app-title {
-            font-family: var(--font-body);
-            font-size: 11px; color: rgba(255,255,255,0.65);
-            letter-spacing: 2px; text-transform: uppercase;
-            border-left: 2px solid rgba(255,255,255,0.2);
-            padding-left: 14px; line-height: 1.3;
-        }
-        #header-date-badge {
-            margin-left: auto;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 20px;
-            padding: 3px 14px;
-            font-size: 12px; color: #ffffff;
-            letter-spacing: 1px; font-weight: 600;
-            font-family: var(--font-body);
-        }
-
-        /* ── Map ── */
-        #map {
-            position: fixed;
-            top: var(--header-h);
-            bottom: calc(var(--timeline-h) + var(--identifier-h));
-            left: 0; right: 0;
-            background: #050a14;
-        }
-
-        /* ── Layer Manager ── */
-        #layer-manager {
-            position: fixed;
-            top: calc(var(--header-h) + 14px);
-            right: 14px;
-            width: 300px;
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius);
-            z-index: 1500;
-            box-shadow: var(--shadow-card);
-            display: flex; flex-direction: column; overflow: hidden;
-            max-height: calc(100vh - var(--header-h) - var(--timeline-h) - var(--identifier-h) - 28px);
-        }
-        #lm-header {
-            background: var(--color-dark);
-            border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
-            padding: 10px 13px;
-            display: flex; align-items: center; gap: 8px;
-            cursor: pointer; user-select: none;
-            flex-shrink: 0;
-        }
-        #lm-header .lm-title {
-            flex: 1;
-            font-family: var(--font-heading);
-            font-size: 11px; font-weight: 600;
-            letter-spacing: 1.8px; text-transform: uppercase;
-            color: #ffffff;
-        }
-        #lm-collapse-btn {
-            background: transparent; border: none;
-            color: rgba(255,255,255,0.65); font-size: 12px;
-            cursor: pointer; padding: 2px 5px; border-radius: var(--radius);
-            transition: background 0.15s;
-        }
-        #lm-collapse-btn:hover { background: rgba(255,255,255,0.15); }
-        #lm-body { padding: 8px; overflow-y: auto; flex: 1; }
-
-        /* ── Layer Items ── */
-        #layer-list {
-            list-style: none; padding: 0; margin: 0;
-            min-height: 44px;
-        }
-        .layer-item {
-            background: var(--color-bg);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius);
-            padding: 9px 10px;
-            margin: 5px 0;
-            cursor: default;
-            transition: border-color 0.15s, background 0.15s;
-        }
-        .layer-item:hover { border-color: var(--color-primary); }
-        .layer-item.ui-sortable-placeholder {
-            background: rgba(1,112,185,0.06);
-            border: 1px dashed var(--color-primary);
-            visibility: visible !important;
-            border-radius: var(--radius);
-        }
-        .layer-item.ui-sortable-helper {
-            background: var(--color-surface);
-            box-shadow: var(--shadow-card);
-            border-color: var(--color-primary);
-        }
-        .layer-row1 {
-            display: flex; align-items: center; gap: 8px;
-            margin-bottom: 8px;
-        }
-        .drag-handle {
-            color: rgba(58,58,58,0.35);
-            cursor: grab; font-size: 11px; padding: 2px;
-            flex-shrink: 0;
-        }
-        .drag-handle:active { cursor: grabbing; }
-        .layer-swatch {
-            width: 9px; height: 9px; border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .layer-label {
-            flex: 1;
-            font-family: var(--font-body);
-            font-size: 12px; font-weight: 500;
-            color: var(--color-text); line-height: 1.3;
-        }
-        .layer-label small {
-            display: block; font-size: 9px;
-            color: var(--color-text-meta);
-            letter-spacing: 0.5px; font-weight: 400;
-        }
-        .vis-btn {
-            background: transparent; border: none;
-            color: var(--color-primary); font-size: 11px;
-            cursor: pointer; padding: 3px 5px; border-radius: var(--radius);
-            flex-shrink: 0;
-            transition: background 0.15s, color 0.15s;
-        }
-        .vis-btn:hover { background: rgba(1,112,185,0.1); }
-        .vis-btn.layer-hidden { color: var(--color-border); }
-        .remove-btn {
-            background: transparent; border: none;
-            color: rgba(58,58,58,0.3); font-size: 11px;
-            cursor: pointer; padding: 3px 5px; border-radius: var(--radius);
-            flex-shrink: 0;
-            transition: background 0.15s, color 0.15s;
-        }
-        .remove-btn:hover { background: rgba(246,65,55,0.1); color: var(--color-hover); }
-        .layer-row2 { display: flex; align-items: center; gap: 8px; }
-        .opacity-icon {
-            font-size: 9px; color: var(--color-text-meta); flex-shrink: 0;
-        }
-        .opacity-slider {
-            flex: 1; -webkit-appearance: none;
-            height: 3px; border-radius: 2px;
-            background: var(--color-border);
-            outline: none; cursor: pointer;
-        }
-        .opacity-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 14px; height: 14px; border-radius: 50%;
-            background: var(--color-primary);
-            border: 2px solid var(--color-surface);
-            cursor: pointer;
-        }
-        .opacity-slider::-moz-range-thumb {
-            width: 14px; height: 14px; border-radius: 50%;
-            background: var(--color-primary);
-            border: 2px solid var(--color-surface);
-            cursor: pointer;
-        }
-        .opacity-pct {
-            font-family: var(--font-body);
-            font-size: 9px; color: var(--color-text-meta);
-            min-width: 28px; text-align: right; flex-shrink: 0;
-        }
-
-        /* ── Timeline ── */
-        #timeline {
-            position: fixed;
-            bottom: var(--identifier-h); left: 0; right: 0;
-            height: var(--timeline-h);
-            background: var(--color-dark);
-            border-top: none;
-            z-index: 2000;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
-            padding: 9px 18px 11px;
-            display: flex; flex-direction: column; gap: 7px;
-        }
-        .tl-row1 {
-            display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;
-        }
-        .tl-btn {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: rgba(255,255,255,0.85);
-            border-radius: var(--radius); padding: 5px 10px;
-            font-family: var(--font-body);
-            font-size: 12px; cursor: pointer;
-            white-space: nowrap; flex-shrink: 0;
-            transition: background 0.15s, border-color 0.15s, color 0.15s;
-        }
-        .tl-btn:hover { background: var(--color-hover); border-color: var(--color-hover); color: #fff; }
-        #play-btn.playing { background: var(--color-hover); border-color: var(--color-hover); }
-        #current-date-display {
-            font-family: var(--font-heading);
-            font-size: 16px; font-weight: 700;
-            color: #ffffff; letter-spacing: 2px;
-            min-width: 108px; text-align: center; flex-shrink: 0;
-        }
-        #date-picker {
-            background: rgba(255,255,255,0.08);
-            color: #ffffff;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: var(--radius); padding: 4px 9px;
-            font-family: var(--font-body);
-            font-size: 12px; outline: none; flex-shrink: 0;
-        }
-        #date-picker:focus { border-color: var(--color-primary); outline: 1px dotted var(--color-primary); }
-        #speed-select {
-            background: rgba(255,255,255,0.08);
-            color: #ffffff;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: var(--radius); padding: 4px 8px;
-            font-family: var(--font-body);
-            font-size: 11px; outline: none; flex-shrink: 0;
-        }
-        .tl-spacer { flex: 1; }
-        .tl-row2 { display: flex; align-items: center; gap: 8px; }
-        .tl-range-label {
-            font-family: var(--font-body);
-            font-size: 10px; color: rgba(255,255,255,0.45);
-            white-space: nowrap; flex-shrink: 0;
-        }
-        #timeline-slider {
-            flex: 1; -webkit-appearance: none;
-            height: 5px; border-radius: 3px;
-            background: rgba(255,255,255,0.15);
-            outline: none; cursor: pointer;
-        }
-        #timeline-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 20px; height: 20px; border-radius: 50%;
-            background: var(--color-hover);
-            border: 3px solid #ffffff;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-        }
-        #timeline-slider::-moz-range-thumb {
-            width: 20px; height: 20px; border-radius: 50%;
-            background: var(--color-hover);
-            border: 3px solid #ffffff;
-            cursor: pointer;
-        }
-
-        /* ── Loading Badge ── */
-        #loading-badge {
-            position: fixed;
-            top: calc(var(--header-h) + 12px);
-            left: 50%; transform: translateX(-50%);
-            background: var(--color-surface);
-            color: var(--color-primary);
-            font-family: var(--font-body);
-            font-size: 11px; letter-spacing: 1px;
-            padding: 5px 16px; border-radius: 20px;
-            border: 1px solid var(--color-border);
-            z-index: 3000; display: none;
-            box-shadow: var(--shadow-card);
-        }
-
-        /* ── Leaflet overrides ── */
-        .leaflet-control-zoom {
-            border: 1px solid var(--color-border) !important;
-            background: var(--color-surface) !important;
-            border-radius: var(--radius) !important;
-        }
-        .leaflet-control-zoom a {
-            background: transparent !important;
-            color: var(--color-text) !important;
-            border-bottom: 1px solid var(--color-border) !important;
-        }
-        .leaflet-control-zoom a:hover {
-            background: rgba(1,112,185,0.1) !important;
-            color: var(--color-primary) !important;
-        }
-        .leaflet-control-attribution {
-            background: rgba(46,46,50,0.85) !important;
-            color: rgba(255,255,255,0.5) !important;
-            font-size: 10px !important;
-        }
-        .leaflet-control-attribution a { color: var(--color-action) !important; }
-
-        /* ── Responsive tweaks ── */
-        @media (max-width: 768px) {
-            #layer-manager { width: 260px; right: 8px; }
-            .app-title { display: none; }
-            .tl-btn .btn-label { display: none; }
-        }
-
-        /* ── Leaflet Draw Toolbar – Horizon Theme ── */
-        .leaflet-draw-toolbar a,
-        .leaflet-draw-toolbar a:hover {
-            background-color: var(--color-surface) !important;
-            border-color: var(--color-border) !important;
-        }
-        .leaflet-draw-toolbar a:hover {
-            background-color: rgba(1,112,185,0.1) !important;
-        }
-        .leaflet-draw-section { border-color: var(--color-border) !important; }
-        .leaflet-draw-actions a {
-            background: var(--color-primary) !important;
-            color: #fff !important;
-            border-right-color: rgba(255,255,255,0.2) !important;
-        }
-        .leaflet-draw-actions a:hover {
-            background: var(--color-hover) !important;
-        }
-        .leaflet-draw-tooltip {
-            background: var(--color-surface) !important;
-            border: 1px solid var(--color-border) !important;
-            color: var(--color-text) !important;
-            font-family: var(--font-body) !important;
-            font-size: 11px !important;
-            padding: 4px 10px !important;
-        }
-        .leaflet-draw-tooltip-single,
-        .leaflet-draw-tooltip-subtext {
-            color: var(--color-text-meta) !important;
-        }
-
-        /* ── ClimateSERV Modal ── */
-        #climateModal .modal-content {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius);
-            box-shadow: 0 12px 48px rgba(0,0,0,0.2);
-        }
-        #climateModal .modal-header {
-            background: var(--color-dark);
-            border-bottom: none;
-            border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
-            padding: 14px 20px;
-        }
-        #climateModal .modal-title {
-            font-family: var(--font-heading);
-            font-size: 13px; font-weight: 600;
-            letter-spacing: 1.8px; text-transform: uppercase;
-            color: #ffffff;
-        }
-        #climateModal .btn-close { filter: invert(1) brightness(0.8); }
-        #climateModal .modal-body {
-            padding: 20px;
-            background: var(--color-surface);
-            color: var(--color-text);
-        }
-        #cs-progress-section { text-align: center; padding: 20px 0 10px; }
-        #cs-spinner-wrap { font-size: 36px; color: var(--color-primary); margin-bottom: 16px; }
-        #cs-status-text {
-            font-family: var(--font-body);
-            font-size: 12px; color: var(--color-text-meta);
-            letter-spacing: 0.8px; margin-bottom: 14px;
-        }
-        #cs-request-id {
-            font-size: 10px; color: var(--color-text-meta);
-            word-break: break-all; margin-bottom: 12px;
-        }
-        .cs-progress-wrap {
-            background: var(--color-border);
-            border-radius: var(--radius); height: 8px;
-            overflow: hidden; margin: 0 auto; max-width: 480px;
-        }
-        #cs-progress-bar {
-            height: 100%; width: 0%;
-            background: var(--color-primary);
-            border-radius: var(--radius); transition: width 0.4s ease;
-        }
-        #cs-progress-pct {
-            font-family: var(--font-body);
-            font-size: 11px; color: var(--color-primary);
-            margin-top: 6px; letter-spacing: 1px;
-        }
-        #cs-error-section { display: none; text-align: center; padding: 20px 0; }
-        .cs-error-icon { font-size: 32px; color: var(--color-hover); margin-bottom: 10px; }
-        .cs-error-msg { font-family: var(--font-body); font-size: 12px; color: var(--color-text); }
-        #cs-chart-section { display: none; }
-        .cs-meta-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
-        .cs-meta-pill {
-            background: rgba(1,112,185,0.08);
-            border: 1px solid rgba(1,112,185,0.2);
-            border-radius: 20px; padding: 3px 12px;
-            font-family: var(--font-body);
-            font-size: 10px; color: var(--color-text-meta); letter-spacing: 0.5px;
-        }
-        .cs-meta-pill span { color: var(--color-primary); font-weight: 600; }
-        .cs-stats-row { display: flex; gap: 8px; margin-bottom: 16px; }
-        .cs-stat-card {
-            flex: 1;
-            background: var(--color-bg);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius); padding: 8px 12px;
-            text-align: center; box-shadow: var(--shadow-card);
-        }
-        .cs-stat-card .cs-stat-label {
-            font-family: var(--font-body);
-            font-size: 9px; letter-spacing: 1.2px;
-            text-transform: uppercase; color: var(--color-text-meta); margin-bottom: 4px;
-        }
-        .cs-stat-card .cs-stat-value {
-            font-family: var(--font-heading);
-            font-size: 18px; font-weight: 700; color: var(--color-primary);
-        }
-        #cs-chart-canvas-wrap { position: relative; height: 320px; }
-
-        /* ── WMS Time Range Badge ── */
-        .layer-time-range {
-            font-size: 9px;
-            color: var(--color-primary);
-            background: rgba(1,112,185,0.08);
-            border: 1px solid rgba(1,112,185,0.18);
-            border-radius: var(--radius);
-            padding: 1px 6px;
-            margin-top: 4px;
-            display: inline-block;
-            letter-spacing: 0.3px;
-            font-family: var(--font-body);
-        }
-
-        /* ── WMS Vote Buttons ── */
-        .wms-vote-bar {
-            display: flex; align-items: center; gap: 6px;
-            margin-top: 6px;
-        }
-        .wms-vote-btn {
-            display: inline-flex; align-items: center; gap: 4px;
-            background: transparent;
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius);
-            padding: 2px 8px;
-            font-family: var(--font-body);
-            font-size: 10px; color: var(--color-text-meta);
-            cursor: pointer;
-            transition: background 0.15s, border-color 0.15s, color 0.15s;
-        }
-        .wms-vote-btn:hover { background: rgba(1,112,185,0.08); border-color: var(--color-primary); color: var(--color-primary); }
-        .wms-vote-btn.active-up   { background: rgba(1,112,185,0.12); border-color: var(--color-primary); color: var(--color-primary); font-weight: 600; }
-        .wms-vote-btn.active-down { background: rgba(246,65,55,0.10); border-color: var(--color-hover); color: var(--color-hover); font-weight: 600; }
-
-        /* ── WMS Modal ── */
-        #climateModal,
-        #wmsModal { z-index: 2500; }
-        .modal-backdrop { z-index: 2450; }
-        #wmsModal .modal-content {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius);
-            max-height: calc(100vh - 3.5rem);
-        }
-        #wmsModal .modal-header {
-            background: var(--color-dark);
-            border-bottom: none;
-            border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
-            padding: 14px 20px;
-        }
-        #wmsModal .modal-title {
-            font-family: var(--font-heading);
-            font-size: 13px; font-weight: 600;
-            letter-spacing: 1.8px; text-transform: uppercase;
-            color: #ffffff;
-        }
-        #wmsModal .btn-close { filter: invert(1) brightness(0.8); }
-        #wmsModal .modal-body { padding: 20px; background: var(--color-surface); }
-        #wmsModal .modal-footer {
-            border-top: 1px solid var(--color-border);
-            padding: 12px 20px;
-            background: var(--color-surface);
-        }
-        #wmsModal .form-label {
-            font-family: var(--font-body);
-            font-size: 11px; color: var(--color-text-meta);
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        #wmsModal .form-control {
-            background: var(--color-bg);
-            color: var(--color-text);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius);
-            font-family: var(--font-body); font-size: 13px;
-        }
-        #wmsModal .form-control:focus {
-            background: var(--color-surface);
-            border-color: var(--color-focus);
-            outline: 1px dotted var(--color-focus);
-            box-shadow: none;
-            color: var(--color-text);
-        }
-        #wms-list-container {
-            max-height: 200px; overflow-y: auto;
-            background: var(--color-bg);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius); padding: 5px;
-        }
-        #wmsModal hr { border-color: var(--color-border); margin: 20px 0; }
-
-        /* Modal button variants (used inside light-surface footers) */
-        .tl-btn.tl-btn-secondary {
-            background: var(--color-bg);
-            border-color: var(--color-border);
-            color: var(--color-text);
-        }
-        .tl-btn.tl-btn-secondary:hover { background: var(--color-hover); border-color: var(--color-hover); color: #fff; }
-        .tl-btn.tl-btn-primary {
-            background: var(--color-dark);
-            border-color: var(--color-dark);
-            color: #fff; font-weight: 600;
-        }
-        .tl-btn.tl-btn-primary:hover { background: var(--color-hover); border-color: var(--color-hover); }
-
-        /* SPEED label in timeline bar */
-        .tl-speed-label {
-            font-size: 10px; color: rgba(255,255,255,0.45);
-            white-space: nowrap; flex-shrink: 0;
-        }
-
-        /* ── Basemap Selector ── */
-        .lm-divider {
-            border: none;
-            border-top: 1px solid var(--color-border);
-            margin: 8px 0 6px;
-        }
-        .lm-section-header {
-            display: flex; align-items: center; gap: 6px;
-            cursor: pointer; user-select: none;
-            padding: 2px 2px 4px;
-        }
-        .lm-section-title {
-            flex: 1;
-            font-family: var(--font-heading);
-            font-size: 9px; font-weight: 600;
-            letter-spacing: 1.8px; text-transform: uppercase;
-            color: var(--color-text-meta);
-        }
-        .lm-section-chevron {
-            font-size: 9px; color: var(--color-text-meta);
-            transition: transform 0.2s;
-        }
-        .lm-section-chevron.collapsed { transform: rotate(-90deg); }
-        .basemap-btn {
-            width: 100%;
-            display: flex; align-items: center; gap: 8px;
-            background: var(--color-bg);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius);
-            padding: 7px 9px; margin: 4px 0;
-            cursor: pointer; text-align: left;
-            color: var(--color-text);
-            font-family: var(--font-body);
-            transition: background 0.15s, border-color 0.15s;
-        }
-        .basemap-btn:hover { background: rgba(1,112,185,0.06); border-color: var(--color-primary); }
-        .basemap-btn.active { background: rgba(1,112,185,0.1); border-color: var(--color-primary); }
-        .basemap-btn .bm-icon {
-            font-size: 13px; color: var(--color-primary);
-            width: 16px; text-align: center; flex-shrink: 0;
-        }
-        .basemap-btn .bm-text { flex: 1; }
-        .basemap-btn .bm-label { font-size: 11px; font-weight: 500; color: var(--color-text); display: block; }
-        .basemap-btn .bm-sub { font-size: 9px; color: var(--color-text-meta); }
-        .basemap-btn .bm-check { font-size: 10px; color: var(--color-primary); opacity: 0; }
-        .basemap-btn.active .bm-check { opacity: 1; }
-        .basemap-badge-live {
-            font-size: 8px; background: var(--color-hover);
-            color: #fff; border-radius: var(--radius); padding: 1px 4px;
-            letter-spacing: 0.5px; margin-left: 4px; vertical-align: middle;
-        }
-
-        /* ── Screen-reader-only utility ── */
-        .sr-only {
-            position: absolute;
-            width: 1px; height: 1px;
-            padding: 0; margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap; border: 0;
-        }
-
-        /* ── Skip navigation link ── */
-        .skip-link {
-            position: absolute;
-            left: -9999px; top: -9999px;
-            z-index: 9999;
-            background: var(--color-surface);
-            color: var(--color-primary);
-            border: 2px solid var(--color-primary);
-            border-radius: var(--radius);
-            padding: 8px 18px;
-            font-family: var(--font-body);
-            font-size: 14px; font-weight: 600;
-            text-decoration: none; white-space: nowrap;
-        }
-        .skip-link:focus {
-            left: 50%;
-            top: calc(var(--header-h) + 10px);
-            transform: translateX(-50%);
-        }
-
-        /* ── WCAG 2.2 focus appearance ── */
-        :focus-visible {
-            outline: 2px solid var(--color-primary) !important;
-            outline-offset: 2px !important;
-        }
-        .tl-btn:focus-visible,
-        .vis-btn:focus-visible,
-        .remove-btn:focus-visible,
-        #lm-collapse-btn:focus-visible,
-        .basemap-btn:focus-visible,
-        .wms-vote-btn:focus-visible {
-            outline: 2px solid var(--color-primary) !important;
-            outline-offset: 2px !important;
-        }
-
-        /* ── Explicit contrast for lm-header title (helps AT compute ratio) ── */
-        #lm-header {
-            background-color: #2e2e32;
-        }
-        #lm-header .lm-title {
-            color: #ffffff;
-        }
-
-        /* ── Layer swatch: ensure foreground colour present alongside inline bg ── */
-        .layer-swatch {
-            color: transparent;
-        }
-
-        /* ── Keyboard-accessible section headers ── */
-        #lm-header[role="button"]:focus-visible,
-        #lm-basemap-header[role="button"]:focus-visible {
-            outline: 2px solid var(--color-primary) !important;
-            outline-offset: 1px !important;
-        }
-
-        /* ── Required identifier footer (fixed at bottom of viewport) ── */
-        .usa-identifier {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            z-index: 1999;
-            /* height is set dynamically by JS via --identifier-h */
-        }
-
-        /* ── Hide the empty usa-footer on the map page ── */
-        .usa-footer {
-            display: none;
-        }
-
-        /* ── Allow usa-banner accordion to expand over the map ── */
-        section.usa-banner {
-            position: relative;
-            z-index: 2000;
-        }
-
-        /* Banner content needs an opaque background when overlaying the map */
-        .usa-banner__content {
-            background-color: rgb(246, 246, 246) !important;
-        }
-        @media (min-width: 64em) {
-            .usa-header--basic .usa-navbar {
-                position: relative;
-                width: auto;
-            }
-        }
     </style>
-    {% endblock %}
+    <link rel="stylesheet" href="{% static 'css/sampler.css' %}">
+{% endblock %}
 {#</head>#}
 {#<body>#}
 
-{% block project-title %}<img src="{% static '@nasa-hds/core/dist/assets/img/nasa-branding/nasa-logo.svg' %}" alt="NASA HDS Templates" style="height:50px;"> Air Quality Sampler — Earth Observing System{% endblock %}
+{% block project-title %}
+    <img src="{% static '@nasa-hds/core/dist/assets/img/nasa-branding/nasa-logo.svg' %}" alt="NASA HDS Templates"
+         style="height:50px;"> Air Quality Sampler — Earth Observing System{% endblock %}
 
 {% block top-menu %}
 {% endblock %}
 
 {% block main_content %}
 
-<!-- ── Main application area ── -->
-<main id="main-content">
+    <!-- ── Main application area ── -->
+    <main id="main-content">
 
-<!-- ── Map ── -->
-<div id="map" role="application" aria-label="Interactive air quality map. Use arrow keys to pan, plus and minus to zoom."></div>
+        <!-- ── Map ── -->
+        <div id="map" role="application"
+             aria-label="Interactive air quality map. Use arrow keys to pan, plus and minus to zoom."></div>
 
-<!-- ── Loading Badge ── -->
-<div id="loading-badge" role="status" aria-live="polite" aria-atomic="true">
-    <i class="fas fa-circle-notch fa-spin me-1" aria-hidden="true"></i> Loading tiles&hellip;
-</div>
-
-<!-- ── ClimateSERV Modal ── -->
-<div class="modal fade" id="climateModal" tabindex="-1" aria-labelledby="climateModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="climateModalLabel">
-                    <i class="fas fa-chart-line me-2"></i>
-                    ClimateSERV Data Analysis
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-
-                <!-- ── Progress State ── -->
-                <div id="cs-progress-section">
-                    <div id="cs-spinner-wrap">
-                        <i class="fas fa-satellite fa-spin"></i>
-                    </div>
-                    <div id="cs-status-text">Initializing request&hellip;</div>
-                    <div id="cs-request-id"></div>
-                    <div class="cs-progress-wrap">
-                        <div id="cs-progress-bar"></div>
-                    </div>
-                    <div id="cs-progress-pct">0%</div>
-                </div>
-
-                <!-- ── Error State ── -->
-                <div id="cs-error-section">
-                    <div class="cs-error-icon"><i class="fas fa-triangle-exclamation"></i></div>
-                    <div class="cs-error-msg" id="cs-error-msg">An error occurred.</div>
-                    <button class="tl-btn mt-3" onclick="csRetry()">
-                        <i class="fas fa-rotate-right me-1"></i> Retry
-                    </button>
-                </div>
-
-                <!-- ── Chart State ── -->
-                <div id="cs-chart-section">
-                    <div class="cs-meta-bar" id="cs-meta-bar"></div>
-                    <div class="cs-stats-row" id="cs-stats-row"></div>
-                    <div id="cs-chart-canvas-wrap">
-                        <canvas id="cs-chart-canvas"></canvas>
-                    </div>
-                </div>
-
-            </div><!-- /modal-body -->
+        <!-- ── Loading Badge ── -->
+        <div id="loading-badge" role="status" aria-live="polite" aria-atomic="true">
+            <i class="fas fa-circle-notch fa-spin me-1" aria-hidden="true"></i> Loading tiles&hellip;
         </div>
-    </div>
-</div>
 
-<!-- ── Add WMS Modal ── -->
-<div class="modal fade" id="wmsModal" tabindex="-1" aria-labelledby="wmsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="wmsModalLabel">
-                    <i class="fas fa-plus-circle me-2"></i>
-                    Add WMS Layer
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <!-- ── ClimateSERV Modal ── -->
+        <div class="modal fade" id="climateModal" tabindex="-1" aria-labelledby="climateModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="climateModalLabel">
+                            <i class="fas fa-chart-line me-2"></i>
+                            ClimateSERV Data Analysis
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        <!-- ── Progress State ── -->
+                        <div id="cs-progress-section">
+                            <div id="cs-spinner-wrap">
+                                <i class="fas fa-satellite fa-spin"></i>
+                            </div>
+                            <div id="cs-status-text">Initializing request&hellip;</div>
+                            <div id="cs-request-id"></div>
+                            <div class="cs-progress-wrap">
+                                <div id="cs-progress-bar"></div>
+                            </div>
+                            <div id="cs-progress-pct">0%</div>
+                        </div>
+
+                        <!-- ── Error State ── -->
+                        <div id="cs-error-section">
+                            <div class="cs-error-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                            <div class="cs-error-msg" id="cs-error-msg">An error occurred.</div>
+                            <button class="tl-btn mt-3" onclick="csRetry()">
+                                <i class="fas fa-rotate-right me-1"></i> Retry
+                            </button>
+                        </div>
+
+                        <!-- ── Chart State ── -->
+                        <div id="cs-chart-section">
+                            <div class="cs-meta-bar" id="cs-meta-bar"></div>
+                            <div class="cs-stats-row" id="cs-stats-row"></div>
+                            <div id="cs-chart-canvas-wrap">
+                                <canvas id="cs-chart-canvas"></canvas>
+                            </div>
+                        </div>
+
+                    </div><!-- /modal-body -->
+                </div>
             </div>
-            <div class="modal-body">
-                <!-- Existing Layers Section -->
-                <div id="existing-wms-section" class="mb-4">
-                    <label class="form-label wms-form-label">Existing WMS Services</label>
-                    <div id="wms-list-container">
-                        <!-- Populated via JS -->
-                        <div class="text-center py-3" id="wms-loader">
-                            <i class="fas fa-circle-notch fa-spin"></i> Loading...
+        </div>
+
+        <!-- ── Add WMS Modal ── -->
+        <div class="modal fade" id="wmsModal" tabindex="-1" aria-labelledby="wmsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="wmsModalLabel">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Add WMS Layer
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Existing Layers Section -->
+                        <div id="existing-wms-section" class="mb-4">
+                            <label class="form-label wms-form-label">Existing WMS Services</label>
+                            <div id="wms-list-container">
+                                <!-- Populated via JS -->
+                                <div class="text-center py-3" id="wms-loader">
+                                    <i class="fas fa-circle-notch fa-spin"></i> Loading...
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="wms-divider">
+
+                        <!-- New Layer Section -->
+                        <input type="hidden" id="selected-wms-id">
+                        <div class="mb-3">
+                            <label for="wms-url" class="form-label wms-form-label">WMS Service URL</label>
+                            <input type="text" class="form-control wms-input" id="wms-url"
+                                   placeholder="https://ows.terrestris.de/osm/service">
+                        </div>
+                        <div class="mb-3">
+                            <label for="wms-layer" class="form-label wms-form-label">Layer Name</label>
+                            <input type="text" class="form-control wms-input" id="wms-layer" placeholder="OSM-WMS">
+                        </div>
+                        <div class="mb-3">
+                            <label for="wms-label" class="form-label wms-form-label">Display Label</label>
+                            <input type="text" class="form-control wms-input" id="wms-label"
+                                   placeholder="My Custom Layer">
                         </div>
                     </div>
-                </div>
-
-                <hr class="wms-divider">
-
-                <!-- New Layer Section -->
-                <input type="hidden" id="selected-wms-id">
-                <div class="mb-3">
-                    <label for="wms-url" class="form-label wms-form-label">WMS Service URL</label>
-                    <input type="text" class="form-control wms-input" id="wms-url" placeholder="https://ows.terrestris.de/osm/service">
-                </div>
-                <div class="mb-3">
-                    <label for="wms-layer" class="form-label wms-form-label">Layer Name</label>
-                    <input type="text" class="form-control wms-input" id="wms-layer" placeholder="OSM-WMS">
-                </div>
-                <div class="mb-3">
-                    <label for="wms-label" class="form-label wms-form-label">Display Label</label>
-                    <input type="text" class="form-control wms-input" id="wms-label" placeholder="My Custom Layer">
+                    <div class="modal-footer">
+                        <button type="button" class="tl-btn tl-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="tl-btn tl-btn-primary" onclick="addWMSLayer()">
+                            <i class="fas fa-plus me-1"></i> Add Layer
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="tl-btn tl-btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="tl-btn tl-btn-primary" onclick="addWMSLayer()">
-                    <i class="fas fa-plus me-1"></i> Add Layer
+        </div>
+
+        <!-- ── Layer Manager ── -->
+        <div id="layer-manager" role="complementary" aria-label="Layer Manager">
+            <!-- lm-header: mouse-clickable for convenience; keyboard users use lm-collapse-btn -->
+            <div id="lm-header" onclick="toggleLayerManager()">
+                <span class="lm-title"><i class="fas fa-layer-group me-2" aria-hidden="true"></i>Layer Manager</span>
+                <button id="lm-collapse-btn" title="Collapse panel"
+                        aria-label="Collapse Layer Manager panel"
+                        aria-expanded="true" aria-controls="lm-body"
+                        onclick="event.stopPropagation(); toggleLayerManager();">
+                    <i class="fas fa-minus" aria-hidden="true"></i>
                 </button>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- ── Layer Manager ── -->
-<div id="layer-manager" role="complementary" aria-label="Layer Manager">
-    <!-- lm-header: mouse-clickable for convenience; keyboard users use lm-collapse-btn -->
-    <div id="lm-header" onclick="toggleLayerManager()">
-        <span class="lm-title"><i class="fas fa-layer-group me-2" aria-hidden="true"></i>Layer Manager</span>
-        <button id="lm-collapse-btn" title="Collapse panel"
-                aria-label="Collapse Layer Manager panel"
-                aria-expanded="true" aria-controls="lm-body"
-                onclick="event.stopPropagation(); toggleLayerManager();">
-            <i class="fas fa-minus" aria-hidden="true"></i>
-        </button>
-    </div>
-    <div id="lm-body">
-        <!-- Basemap section (top, collapsible) -->
-        <div class="lm-section-header" id="lm-basemap-header" onclick="toggleBasemapSection()"
-             role="button" tabindex="0" aria-expanded="true" aria-controls="basemap-list"
-             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleBasemapSection();}">
-            <span class="lm-section-title"><i class="fas fa-map me-1" aria-hidden="true"></i>Basemap</span>
-            <i class="fas fa-chevron-down lm-section-chevron" id="lm-basemap-chevron" aria-hidden="true"></i>
-        </div>
-        <div id="basemap-list">
-            <!-- populated by buildBasemapUI() -->
-        </div>
-
-        <hr class="lm-divider">
-
-        <!-- Layers section -->
-        <div class="lm-section-title" style="padding: 0 2px 4px;"><i class="fas fa-layer-group me-1"></i>Layers</div>
-        <ul id="layer-list"></ul>
-    </div>
-</div>
-
-<!-- ── Timeline ── -->
-<div id="timeline" role="region" aria-label="Timeline date controls">
-    <div class="tl-row1">
-        <button class="tl-btn" onclick="stepDate(-365)" title="Back 1 year" aria-label="Back 1 year">
-            <i class="fas fa-backward-fast" aria-hidden="true"></i>
-        </button>
-        <button class="tl-btn" onclick="stepDate(-30)" title="Back 1 month" aria-label="Back 1 month">
-            <i class="fas fa-backward-step" aria-hidden="true"></i>
-        </button>
-        <button class="tl-btn" onclick="stepDate(-1)" title="Back 1 day" aria-label="Back 1 day">
-            <i class="fas fa-backward" aria-hidden="true"></i>
-        </button>
-        <button class="tl-btn" id="play-btn" onclick="togglePlay()" title="Play / Pause" aria-label="Play animation" aria-pressed="false">
-            <i class="fas fa-play" aria-hidden="true"></i>
-        </button>
-        <button class="tl-btn" onclick="stepDate(1)" title="Forward 1 day" aria-label="Forward 1 day">
-            <i class="fas fa-forward" aria-hidden="true"></i>
-        </button>
-        <button class="tl-btn" onclick="stepDate(30)" title="Forward 1 month" aria-label="Forward 1 month">
-            <i class="fas fa-forward-step" aria-hidden="true"></i>
-        </button>
-        <button class="tl-btn" onclick="stepDate(365)" title="Forward 1 year" aria-label="Forward 1 year">
-            <i class="fas fa-forward-fast" aria-hidden="true"></i>
-        </button>
-
-        <div id="current-date-display" aria-live="polite" aria-atomic="true">2024-08-21</div>
-        <label for="date-picker" class="sr-only">Select map date</label>
-        <input type="date" id="date-picker" value="2024-08-21"
-               min="2015-01-01" max="2024-12-31" aria-label="Select map date">
-        <div class="tl-spacer"></div>
-        <label class="tl-speed-label" for="speed-select">
-            SPEED
-        </label>
-        <select id="speed-select" aria-label="Animation playback speed">
-            <option value="2000">0.5×</option>
-            <option value="1000" selected>1×</option>
-            <option value="500">2×</option>
-            <option value="250">4×</option>
-        </select>
-    </div>
-    <div class="tl-row2">
-        <span class="tl-range-label" id="tl-range-start">Jan 2015</span>
-        <label for="timeline-slider" class="sr-only">Timeline position</label>
-        <input type="range" id="timeline-slider" min="0" max="3650" value="3519"
-               aria-label="Timeline date position" aria-valuetext="2024-08-21">
-        <span class="tl-range-label" id="tl-range-end">Dec 2024</span>
-    </div>
-</div>
-
-</main><!-- /main#main-content -->
-
-<!-- ── Scripts ── -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-<script>
-/* Base path for API calls — empty in dev, set to the proxy prefix in production */
-const SCRIPT_NAME = "{{ script_name }}";
-
-/* ── Chart.js global defaults (Horizon typography) ── */
-Chart.defaults.font.family = "'Public Sans', sans-serif";
-
-/* ═══════════════════════════════════════════════════════════
-   Configuration
-═══════════════════════════════════════════════════════════ */
-const DEFAULT_START = new Date('2015-01-01T00:00:00Z');
-const DEFAULT_END   = new Date('2024-12-31T00:00:00Z');
-let   RANGE_START   = new Date(DEFAULT_START);
-let   RANGE_END     = new Date(DEFAULT_END);
-let   TOTAL_DAYS    = Math.round((RANGE_END - RANGE_START) / 86400000);
-let   currentDate   = new Date('2024-08-21T00:00:00Z');
-
-// Layer definitions – order = visual stack order (index 0 = topmost)
-const LAYER_DEFS = [
-    {
-        id:       'co500',
-        gibs:     'AIRS_L2_Carbon_Monoxide_500hPa_Volume_Mixing_Ratio_Day',
-        label:    'CO 500 hPa',
-        sublabel: 'AIRS L2 Carbon Monoxide · Daily',
-        color:    '#ff7043',
-        opacity:  0.85,
-        visible:  false,
-    },
-    {
-        id:       'aerosol',
-        gibs:     'OMI_Aerosol_Index',
-        label:    'Aerosol Index',
-        sublabel: 'OMI Aerosol Index · Daily',
-        color:    '#0170B9',
-        opacity:  0.85,
-        visible:  false,
-    },
-    {
-        id:            'modis',
-        gibs:          'MODIS_Terra_CorrectedReflectance_TrueColor',
-        label:         'MODIS True Color',
-        sublabel:      'MODIS Terra · 250 m',
-        format:        'image/jpeg',
-        opacity:       1.0,
-        visible:       false,
-    },
-];
-
-
-/* ═══════════════════════════════════════════════════════════
-   Helpers
-═══════════════════════════════════════════════════════════ */
-function toWMTSTime(date) {
-    const y = date.getUTCFullYear();
-    const m = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const d = String(date.getUTCDate()).padStart(2, '0');
-    return `${y}-${m}-${d}T00:00:00Z`;
-}
-
-function toDisplayDate(date) {
-    const y = date.getUTCFullYear();
-    const m = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const d = String(date.getUTCDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-}
-
-function clampDate(date) {
-    if (date < RANGE_START) return new Date(RANGE_START);
-    if (date > RANGE_END)   return new Date(RANGE_END);
-    return date;
-}
-
-function dateToSlider(date) {
-    return Math.round((date - RANGE_START) / 86400000);
-}
-
-function sliderToDate(val) {
-    return new Date(RANGE_START.getTime() + val * 86400000);
-}
-
-function recalcSliderRange() {
-    // Collect all layer time bounds; fall back to defaults when a layer has no time metadata
-    let minMs = DEFAULT_START.getTime();
-    let maxMs = DEFAULT_END.getTime();
-    let hasAny = false;
-
-    LAYER_DEFS.forEach(def => {
-        if (def.timeStart) {
-            const t = new Date(def.timeStart).getTime();
-            if (!isNaN(t)) { if (!hasAny || t < minMs) minMs = t; hasAny = true; }
-        }
-        if (def.timeEnd) {
-            const t = new Date(def.timeEnd).getTime();
-            if (!isNaN(t)) { if (!hasAny || t > maxMs) maxMs = t; hasAny = true; }
-        }
-    });
-
-    if (!hasAny) { minMs = DEFAULT_START.getTime(); maxMs = DEFAULT_END.getTime(); }
-
-    RANGE_START = new Date(minMs);
-    RANGE_END   = new Date(maxMs);
-    TOTAL_DAYS  = Math.round((maxMs - minMs) / 86400000);
-
-    const $slider = $('#timeline-slider');
-    $slider.attr('min', 0).attr('max', TOTAL_DAYS);
-    $slider.val(dateToSlider(clampDate(currentDate)));
-
-    // Update range labels
-    const fmt = d => d.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
-    $('#tl-range-start').text(fmt(RANGE_START));
-    $('#tl-range-end').text(fmt(RANGE_END));
-
-    applyDate(currentDate);
-}
-
-
-/* ═══════════════════════════════════════════════════════════
-   Timed WMS Tile Layer (extends L.TileLayer.WMS)
-═══════════════════════════════════════════════════════════ */
-const TimedWMS = L.TileLayer.WMS.extend({
-    initialize(def, time, options) {
-        this._def = def;
-        const wmsOptions = Object.assign({}, options, {
-            layers:      def.gibs,
-            TIME:        time,
-            format:      def.format || 'image/png',
-            transparent: true,
-            version:     '1.3.0'
-        });
-        L.TileLayer.WMS.prototype.initialize.call(this, 'https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi', wmsOptions);
-    },
-
-    setTime(time) {
-        this.setParams({ TIME: time }, false);
-    },
-});
-
-
-/* ═══════════════════════════════════════════════════════════
-   Map Initialisation
-═══════════════════════════════════════════════════════════ */
-const map = L.map('map', {
-    crs:        L.CRS.EPSG3857,
-    center:     [20, 0],
-    zoom:       2,
-    minZoom:    1,
-    maxZoom:    16,
-    maxBounds:  [[-85.0511, -220], [85.0511, 220]],
-    zoomControl: false,
-});
-
-L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-/* ═══════════════════════════════════════════════════════════
-   Basemap System
-═══════════════════════════════════════════════════════════ */
-let currentBasemap   = null;
-let currentBasemapId = 'bluemarble';
-
-const BASEMAP_DEFS = [
-    {
-        id:      'bluemarble',
-        label:   'Blue Marble',
-        sub:     'NASA GIBS · Static global',
-        icon:    'fa-earth-americas',
-        live:    false,
-        create() {
-            return L.tileLayer.wms('https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi', {
-                layers:         'BlueMarble_ShadedRelief_Bathymetry',
-                format:         'image/jpeg',
-                styles:         'default',
-                version:        '1.3.0',
-                transparent:    false,
-                tileSize:       512,
-                maxNativeZoom:  9,
-                noWrap:         true,
-                bounds:         [[-85.0511, -180], [85.0511, 180]],
-                attribution:    '&copy; <a href="https://earthdata.nasa.gov" target="_blank">NASA EOSDIS GIBS</a>',
-            });
-        },
-    },
-    {
-        id:      'osm',
-        label:   'OpenStreetMap',
-        sub:     'Street map · Zoom to 16',
-        icon:    'fa-map',
-        live:    false,
-        create() {
-            return L.tileLayer.wms('https://ows.terrestris.de/osm/service', {
-                layers:      'OSM-WMS',
-                format:      'image/png',
-                version:     '1.3.0',
-                transparent: true,
-                crs:         L.CRS.EPSG3857,
-                uppercase:   true,
-                maxZoom:     16,
-                attribution: '&copy; <a href="https://www.terrestris.de/">terrestris GmbH</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
-            });
-        },
-    },
-    {
-        id:      'darkmatter',
-        label:   'Dark Matter',
-        sub:     'CARTO · Dark theme',
-        icon:    'fa-moon',
-        live:    false,
-        create() {
-            return L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                subdomains: 'abcd',
-                maxZoom: 20
-            });
-        },
-    },
-];
-
-function selectBasemap(id) {
-    if (id === currentBasemapId && currentBasemap) return;
-
-    // Remove old basemap
-    if (currentBasemap) {
-        map.removeLayer(currentBasemap);
-        currentBasemap = null;
-    }
-
-    const def = BASEMAP_DEFS.find(b => b.id === id);
-    if (!def) return;
-
-    currentBasemap   = def.create();
-    currentBasemapId = id;
-    currentBasemap.addTo(map);
-    currentBasemap.bringToBack();
-
-    // Keep data layers on top
-    enforceZOrder();
-    buildBasemapUI();
-}
-
-function buildBasemapUI() {
-    const $wrap = $('#basemap-list').empty();
-    BASEMAP_DEFS.forEach(def => {
-        const isActive = def.id === currentBasemapId;
-        const liveBadge = def.live
-            ? '<span class="basemap-badge-live">LIVE</span>'
-            : '';
-        const $btn = $(`
-            <button class="basemap-btn ${isActive ? 'active' : ''}" data-id="${def.id}">
-                <i class="fas ${def.icon} bm-icon"></i>
-                <span class="bm-text">
-                    <span class="bm-label">${def.label}${liveBadge}</span>
-                    <span class="bm-sub">${def.sub}</span>
-                </span>
-                <i class="fas fa-check bm-check"></i>
-            </button>
-        `);
-        $wrap.append($btn);
-    });
-
-    $wrap.off('click.bm').on('click.bm', '.basemap-btn', function () {
-        selectBasemap($(this).data('id'));
-    });
-}
-
-// selectBasemap() is called in the Boot section below,
-// after leafletLayers is initialised.
-
-
-/* ═══════════════════════════════════════════════════════════
-   Data Layers
-═══════════════════════════════════════════════════════════ */
-const leafletLayers = {};  // id → TimedWMS instance
-
-function initDataLayers() {
-    const time = toWMTSTime(currentDate);
-    LAYER_DEFS.forEach(def => {
-        const lyr = new TimedWMS(def, time, {
-            subdomains:     ['a', 'b', 'c'],
-            tileSize:       512,
-            opacity:        def.opacity,
-            noWrap:         true,
-            bounds:         [[-85.0511, -180], [85.0511, 180]],
-            maxNativeZoom:  9,
-            attribution:    '&copy; <a href="https://earthdata.nasa.gov" target="_blank">NASA EOSDIS GIBS</a>',
-        });
-        if (def.visible) lyr.addTo(map);
-        leafletLayers[def.id] = lyr;
-    });
-    enforceZOrder();
-}
-
-// Bring layers to front in reverse LAYER_DEFS order (index 0 is topmost)
-function enforceZOrder() {
-    [...LAYER_DEFS].reverse().forEach(def => {
-        const lyr = leafletLayers[def.id];
-        if (lyr && def.visible) {
-            if (lyr.bringToFront) lyr.bringToFront();
-        }
-    });
-}
-
-function refreshAllTimes() {
-    const time = toWMTSTime(currentDate);
-    LAYER_DEFS.forEach(def => {
-        if (leafletLayers[def.id]) {
-            if (def.isWMS) {
-                // If the WMS supports TIME parameter, update it
-                leafletLayers[def.id].setParams({ TIME: time }, false);
-            } else if (leafletLayers[def.id].setTime) {
-                leafletLayers[def.id].setTime(time);
-            }
-        }
-    });
-}
-
-/* ═══════════════════════════════════════════════════════════
-   Custom WMS Addition
-═══════════════════════════════════════════════════════════ */
-function loadWMSServices() {
-    $('#wms-loader').show();
-    $('#wms-list-container').find('.wms-entry').remove();
-
-    $.getJSON(SCRIPT_NAME + '/api/wms/', function(data) {
-        $('#wms-loader').hide();
-        if (data.length === 0) {
-            $('#wms-list-container').append('<div class="text-center py-2 wms-entry" style="font-size: 11px; color: var(--color-text-meta);">No services found.</div>');
-            return;
-        }
-        data.forEach(s => {
-            const upActive   = s.user_vote === 'up'   ? 'active-up'   : '';
-            const downActive = s.user_vote === 'down' ? 'active-down' : '';
-            const $entry = $(`
-                <div class="wms-entry" data-id="${s.id}" style="padding: 8px; border-bottom: 1px solid var(--color-border); cursor: pointer; transition: background 0.15s;">
-                    <div style="font-size: 12px; font-weight: 600; color: var(--color-primary);">${s.label}</div>
-                    <div style="font-size: 10px; color: var(--color-text-meta); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${s.url}</div>
-                    <div style="font-size: 9px; color: var(--color-text-meta); opacity: 0.6; display: flex; justify-content: space-between; margin-top: 4px;">
-                        <span><i class="fas fa-user me-1"></i>${s.creator}</span>
-                        <span><i class="fas fa-calendar-alt me-1"></i>${s.created_at}</span>
-                    </div>
-                    <div class="wms-vote-bar">
-                        <button class="wms-vote-btn ${upActive}" data-id="${s.id}" data-vote="up" title="Helpful">
-                            <i class="fas fa-thumbs-up"></i>
-                            <span class="vote-up-count">${s.thumbs_up}</span>
-                        </button>
-                        <button class="wms-vote-btn ${downActive}" data-id="${s.id}" data-vote="down" title="Not helpful">
-                            <i class="fas fa-thumbs-down"></i>
-                            <span class="vote-down-count">${s.thumbs_down}</span>
-                        </button>
-                    </div>
+            <div id="lm-body">
+                <!-- Basemap section (top, collapsible) -->
+                <div class="lm-section-header" id="lm-basemap-header" onclick="toggleBasemapSection()"
+                     role="button" tabindex="0" aria-expanded="true" aria-controls="basemap-list"
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleBasemapSection();}">
+                    <span class="lm-section-title"><i class="fas fa-map me-1" aria-hidden="true"></i>Basemap</span>
+                    <i class="fas fa-chevron-down lm-section-chevron" id="lm-basemap-chevron" aria-hidden="true"></i>
                 </div>
-            `);
-            $entry.on('click', function(e) {
-                if (!$(e.target).closest('.wms-vote-btn').length) {
-                    selectExistingWMS(s);
-                }
-            });
-            $entry.hover(
-                function() { $(this).css('background', 'rgba(1, 112, 185, 0.08)'); },
-                function() { $(this).css('background', 'transparent'); }
-            );
-            $entry.find('.wms-vote-btn').on('click', function(e) {
-                e.stopPropagation();
-                voteWMS($(this).data('id'), $(this).data('vote'), $(this).closest('.wms-entry'));
-            });
-            $('#wms-list-container').append($entry);
-        });
-    });
-}
-
-function selectExistingWMS(service) {
-    $('#wms-url').val(service.url);
-    $('#wms-layer').val(service.layers);
-    $('#wms-label').val(service.label);
-    $('#selected-wms-id').val(service.id);
-}
-
-function voteWMS(serviceId, vote, $entry) {
-    fetch(SCRIPT_NAME + `/api/wms/${serviceId}/vote/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({ vote })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.error) return;
-        $entry.find('.vote-up-count').text(data.thumbs_up);
-        $entry.find('.vote-down-count').text(data.thumbs_down);
-        $entry.find('[data-vote="up"]').toggleClass('active-up', data.user_vote === 'up');
-        $entry.find('[data-vote="down"]').toggleClass('active-down', data.user_vote === 'down');
-    })
-    .catch(err => console.error('Vote error:', err));
-}
-
-// Clear selected ID if user types in any input
-$(document).on('input', '.wms-input', function() {
-    $('#selected-wms-id').val('');
-});
-
-// Attach event to load WMS when modal is shown
-$('#wmsModal').on('show.bs.modal', function () {
-    loadWMSServices();
-    $('#selected-wms-id').val(''); // Reset on open
-});
-
-function addWMSLayer() {
-    const url = $('#wms-url').val().trim();
-    const layerName = $('#wms-layer').val().trim();
-    const label = $('#wms-label').val().trim() || layerName || 'New WMS Layer';
-    const selectedId = $('#selected-wms-id').val();
-
-    if (!url || !layerName) {
-        alert('Please provide both URL and Layer Name.');
-        return;
-    }
-
-    // If we have a selectedId, it means the user picked from the list and didn't change the inputs.
-    // In this case, we skip the save call and just add to map.
-    if (selectedId) {
-        addWMSLayerToMap(url, layerName, label, selectedId);
-        return;
-    }
-
-    const payload = {
-        url: url,
-        layers: layerName,
-        label: label
-    };
-
-    fetch(SCRIPT_NAME + '/api/wms/save/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(data => {
-        addWMSLayerToMap(url, layerName, label, data.id);
-    })
-    .catch(error => {
-        console.error('Error saving WMS:', error);
-        alert('Failed to save WMS service, but adding to map anyway.');
-        addWMSLayerToMap(url, layerName, label, Date.now(), true);
-    });
-}
-
-function addWMSLayerToMap(url, layerName, label, id, isUnsaved = false) {
-    const layerId = 'wms-' + id;
-    const newDef = {
-        id: layerId,
-        url: url,
-        layers: layerName,
-        label: label,
-        sublabel: isUnsaved ? 'Custom WMS Layer (Unsaved)' : 'Custom WMS Layer',
-        color: isUnsaved ? '#ffc107' : '#0170B9',
-        opacity: 0.85,
-        visible: true,
-        isWMS: true
-    };
-
-    // Insert at beginning of LAYER_DEFS so it appears at top
-    LAYER_DEFS.unshift(newDef);
-
-    const lyr = L.tileLayer.wms(url, {
-        layers: layerName,
-        format: 'image/png',
-        transparent: true,
-        opacity: newDef.opacity,
-        attribution: 'Custom WMS',
-        version: '1.1.1'
-    });
-
-    lyr.addTo(map);
-    leafletLayers[layerId] = lyr;
-
-    buildLayerUI();
-    enforceZOrder();
-
-    // Fetch TIME dimension from GetCapabilities and update the sublabel
-    fetchWMSTimeDimension(url, layerName, newDef);
-
-    $('#wmsModal').modal('hide');
-    // Clear inputs
-    $('#wms-url').val('');
-    $('#wms-layer').val('');
-    $('#wms-label').val('');
-    $('#selected-wms-id').val('');
-}
-
-function fetchWMSTimeDimension(url, layerName, def) {
-    const params = new URLSearchParams({ url, layer: layerName });
-    fetch(SCRIPT_NAME + '/api/wms/time/?' + params)
-        .then(r => r.json())
-        .then(data => {
-            if (data.start || data.end || data.time_extent) {
-                let rangeText = 'Custom WMS Layer';
-                if (data.start && data.end) {
-                    rangeText = `${data.start} – ${data.end}`;
-                } else if (data.time_extent) {
-                    rangeText = data.time_extent.length > 40
-                        ? data.time_extent.slice(0, 40) + '…'
-                        : data.time_extent;
-                }
-                def.sublabel = rangeText;
-                def.timeExtent = data.time_extent || null;
-                def.timeStart  = data.start || null;
-                def.timeEnd    = data.end   || null;
-                buildLayerUI();
-                recalcSliderRange();
-            }
-        })
-        .catch(() => { /* silently ignore — sublabel stays as default */ });
-}
-
-// Helper for CSRF
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-// Add a custom control for "Add WMS" on the map
-const AddWMSControl = L.Control.extend({
-    options: {
-        position: 'topleft'
-    },
-    onAdd: function (map) {
-        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-        container.style.backgroundColor = 'var(--color-surface)';
-        container.style.width = '34px';
-        container.style.height = '34px';
-        container.style.display = 'flex';
-        container.style.alignItems = 'center';
-        container.style.justifyContent = 'center';
-        container.style.cursor = 'pointer';
-        container.style.border = '1px solid var(--color-border)';
-        container.title = 'Add WMS Layer';
-
-        container.setAttribute('role', 'button');
-        container.setAttribute('aria-label', 'Add WMS Layer');
-
-        const icon = L.DomUtil.create('i', 'fas fa-plus-circle', container);
-        icon.style.color = '#0170B9';           /* explicit hex — no CSS var */
-        icon.style.backgroundColor = 'transparent';
-        icon.style.fontSize = '16px';
-        icon.setAttribute('aria-hidden', 'true');
-
-        container.onclick = function (e) {
-            L.DomEvent.stopPropagation(e);
-            $('#wmsModal').modal('show');
-        };
-        L.DomEvent.disableClickPropagation(container);
-
-        return container;
-    }
-});
-map.addControl(new AddWMSControl());
-
-
-/* ═══════════════════════════════════════════════════════════
-   Layer Manager UI
-═══════════════════════════════════════════════════════════ */
-function buildLayerUI() {
-    const $list = $('#layer-list').empty();
-
-    LAYER_DEFS.forEach(def => {
-        const pct      = Math.round(def.opacity * 100);
-        const eyeIcon  = def.visible ? 'fa-eye' : 'fa-eye-slash';
-        const hiddenCls = def.visible ? '' : 'layer-hidden';
-
-        const timeRangeBadge = (def.timeStart || def.timeEnd)
-            ? `<span class="layer-time-range"><i class="fas fa-clock" style="font-size:8px;margin-right:3px;"></i>${def.timeStart || '?'} – ${def.timeEnd || '?'}</span>`
-            : '';
-
-        const $li = $(`
-            <li class="layer-item" data-id="${def.id}">
-                <div class="layer-row1">
-                    <span class="drag-handle" title="Drag to reorder" aria-hidden="true">
-                        <i class="fas fa-grip-vertical" aria-hidden="true"></i>
-                    </span>
-                    <span class="layer-swatch" style="background:${def.color}; color: transparent;" role="presentation" aria-hidden="true"></span>
-                    <span class="layer-label" id="layer-label-${def.id}">
-                        ${def.label}
-                        <small>${def.sublabel}</small>
-                        ${timeRangeBadge}
-                    </span>
-                    <button class="vis-btn ${hiddenCls}" title="Toggle ${def.label} visibility"
-                            aria-label="Toggle ${def.label} layer visibility"
-                            aria-pressed="${def.visible}"
-                            data-id="${def.id}">
-                        <i class="fas ${eyeIcon}" aria-hidden="true"></i>
-                    </button>
-                    <button class="remove-btn" title="Remove ${def.label} layer"
-                            aria-label="Remove ${def.label} layer"
-                            data-id="${def.id}">
-                        <i class="fas fa-xmark" aria-hidden="true"></i>
-                    </button>
+                <div id="basemap-list">
+                    <!-- populated by buildBasemapUI() -->
                 </div>
-                <div class="layer-row2">
-                    <i class="fas fa-circle-half-stroke opacity-icon" aria-hidden="true"></i>
-                    <label for="opacity-${def.id}" class="sr-only">${def.label} layer opacity</label>
-                    <input type="range" class="opacity-slider"
-                           id="opacity-${def.id}"
-                           min="0" max="100" value="${pct}"
-                           data-id="${def.id}"
-                           aria-label="${def.label} layer opacity"
-                           aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">
-                    <span class="opacity-pct" id="pct-${def.id}" aria-live="polite">${pct}%</span>
+
+                <hr class="lm-divider">
+
+                <!-- Layers section -->
+                <div class="lm-section-title" style="padding: 0 2px 4px;"><i class="fas fa-layer-group me-1"></i>Layers
                 </div>
-            </li>
-        `);
-        $list.append($li);
-    });
-
-    // Delegated event – visibility toggle
-    $list.off('click.vis').on('click.vis', '.vis-btn', function (e) {
-        e.stopPropagation();
-        toggleVisibility($(this).data('id'));
-    });
-
-    // Delegated event – remove layer
-    $list.off('click.remove').on('click.remove', '.remove-btn', function (e) {
-        e.stopPropagation();
-        removeLayer($(this).data('id'));
-    });
-
-    // Delegated event – opacity slider
-    $list.off('input.opacity').on('input.opacity', '.opacity-slider', function () {
-        setOpacity($(this).data('id'), +this.value);
-    });
-
-    // jQuery UI Sortable
-    if ($list.hasClass('ui-sortable')) $list.sortable('destroy');
-    $list.sortable({
-        handle:      '.drag-handle',
-        axis:        'y',
-        placeholder: 'layer-item ui-sortable-placeholder',
-        update()     { syncLayerOrder(); },
-    });
-}
-
-function toggleLayerManager() {
-    const $body = $('#lm-body');
-    const $icon = $('#lm-collapse-btn i');
-    const $btn  = $('#lm-collapse-btn');
-    if ($body.is(':visible')) {
-        $body.slideUp(200);
-        $icon.removeClass('fa-minus').addClass('fa-plus');
-        $btn.attr('aria-expanded', 'false').attr('aria-label', 'Expand Layer Manager panel');
-    } else {
-        $body.slideDown(200);
-        $icon.removeClass('fa-plus').addClass('fa-minus');
-        $btn.attr('aria-expanded', 'true').attr('aria-label', 'Collapse Layer Manager panel');
-    }
-}
-
-let basemapSectionCollapsed = false;
-
-function toggleBasemapSection() {
-    basemapSectionCollapsed = !basemapSectionCollapsed;
-    const $chevron = $('#lm-basemap-chevron');
-    const $header  = $('#lm-basemap-header');
-    if (basemapSectionCollapsed) {
-        $('#basemap-list').slideUp(180);
-        $chevron.addClass('collapsed');
-        $header.attr('aria-expanded', 'false');
-    } else {
-        $('#basemap-list').slideDown(180);
-        $chevron.removeClass('collapsed');
-        $header.attr('aria-expanded', 'true');
-    }
-}
-
-function removeLayer(id) {
-    const idx = LAYER_DEFS.findIndex(d => d.id === id);
-    if (idx === -1) return;
-    const lyr = leafletLayers[id];
-    if (lyr) {
-        lyr.remove();
-        delete leafletLayers[id];
-    }
-    LAYER_DEFS.splice(idx, 1);
-    buildLayerUI();
-    recalcSliderRange();
-}
-
-function toggleVisibility(id) {
-    const def = LAYER_DEFS.find(d => d.id === id);
-    if (!def) return;
-    def.visible = !def.visible;
-    const lyr = leafletLayers[id];
-    if (def.visible) {
-        lyr.addTo(map);
-        enforceZOrder();
-    } else {
-        lyr.remove();
-    }
-    buildLayerUI();
-}
-
-function setOpacity(id, pct) {
-    const def = LAYER_DEFS.find(d => d.id === id);
-    if (!def) return;
-    def.opacity = pct / 100;
-    if (leafletLayers[id]) leafletLayers[id].setOpacity(def.opacity);
-    $(`#pct-${id}`).text(`${pct}%`);
-}
-
-function syncLayerOrder() {
-    const ordered = [];
-    $('#layer-list .layer-item').each(function () {
-        const id  = $(this).data('id');
-        const def = LAYER_DEFS.find(d => d.id === id);
-        if (def) ordered.push(def);
-    });
-    LAYER_DEFS.length = 0;
-    ordered.forEach(d => LAYER_DEFS.push(d));
-    enforceZOrder();
-}
-
-
-/* ═══════════════════════════════════════════════════════════
-   Timeline & Date Controls
-═══════════════════════════════════════════════════════════ */
-function applyDate(date) {
-    currentDate = clampDate(date);
-    const disp  = toDisplayDate(currentDate);
-
-    $('#current-date-display').text(disp);
-    $('#header-date-badge').text(disp);
-    $('#date-picker').val(disp);
-    $('#timeline-slider').val(dateToSlider(currentDate));
-
-    refreshAllTimes();
-}
-
-function stepDate(days) {
-    const d = new Date(currentDate);
-    d.setUTCDate(d.getUTCDate() + days);
-    applyDate(d);
-}
-
-// Slider – update display on every tick, refresh tiles only on release
-$('#timeline-slider').on('input', function () {
-    const d    = sliderToDate(+this.value);
-    const disp = toDisplayDate(d);
-    currentDate = clampDate(d);
-    $('#current-date-display').text(disp);
-    $('#header-date-badge').text(disp);
-    $('#date-picker').val(disp);
-});
-$('#timeline-slider').on('change', function () {
-    refreshAllTimes();
-});
-
-// Date picker
-$('#date-picker').on('change', function () {
-    if (!this.value) return;
-    const [y, mo, d] = this.value.split('-').map(Number);
-    applyDate(new Date(Date.UTC(y, mo - 1, d)));
-});
-
-// Speed selector restarts play if active
-$('#speed-select').on('change', function () {
-    if (playing) { stopPlay(); startPlay(); }
-});
-
-
-/* ═══════════════════════════════════════════════════════════
-   Play / Pause Animation
-═══════════════════════════════════════════════════════════ */
-let playing   = false;
-let playTimer = null;
-
-function togglePlay() {
-    playing = !playing;
-    const $btn = $('#play-btn');
-    if (playing) {
-        $btn.html('<i class="fas fa-pause" aria-hidden="true"></i>')
-            .addClass('playing')
-            .attr('aria-pressed', 'true')
-            .attr('aria-label', 'Pause animation');
-        startPlay();
-    } else {
-        $btn.html('<i class="fas fa-play" aria-hidden="true"></i>')
-            .removeClass('playing')
-            .attr('aria-pressed', 'false')
-            .attr('aria-label', 'Play animation');
-        stopPlay();
-    }
-}
-
-function startPlay() {
-    const speed = +$('#speed-select').val();
-    playTimer = setInterval(() => {
-        const d = new Date(currentDate);
-        d.setUTCDate(d.getUTCDate() + 1);
-        applyDate(d > RANGE_END ? new Date(RANGE_START) : d);
-    }, speed);
-}
-
-function stopPlay() {
-    clearInterval(playTimer);
-    playTimer = null;
-}
-
-
-/* ═══════════════════════════════════════════════════════════
-   Tile Loading Indicator
-═══════════════════════════════════════════════════════════ */
-let loadCount = 0;
-
-map.on('tileloadstart', () => {
-    loadCount++;
-    if (loadCount === 1) $('#loading-badge').fadeIn(150);
-});
-map.on('tileload tileerror', () => {
-    loadCount = Math.max(0, loadCount - 1);
-    if (loadCount === 0) $('#loading-badge').fadeOut(400);
-});
-
-
-/* ═══════════════════════════════════════════════════════════
-   Drawing Tools (Leaflet.draw)
-═══════════════════════════════════════════════════════════ */
-const drawnItems = new L.FeatureGroup();
-map.addLayer(drawnItems);
-
-const drawControl = new L.Control.Draw({
-    position: 'topleft',
-    draw: {
-        polygon: {
-            allowIntersection: false,
-            showArea: true,
-            shapeOptions: {
-                color:        '#0170B9',
-                weight:       2,
-                fillColor:    '#0170B9',
-                fillOpacity:  0.12,
-                dashArray:    '4 4',
-            },
-        },
-        rectangle: {
-            shapeOptions: {
-                color:       '#0170B9',
-                weight:      2,
-                fillColor:   '#0170B9',
-                fillOpacity: 0.12,
-                dashArray:   '4 4',
-            },
-        },
-        circle:       false,
-        polyline:     false,
-        marker:       false,
-        circlemarker: false,
-    },
-    edit: {
-        featureGroup: drawnItems,
-        remove:       true,
-    },
-});
-map.addControl(drawControl);
-
-// Track the last geometry for retry
-let lastGeometry = null;
-
-// When a shape is completed, clear previous, store geometry, trigger API
-map.on(L.Draw.Event.CREATED, function (e) {
-    drawnItems.clearLayers();
-    drawnItems.addLayer(e.layer);
-
-    const geojson  = e.layer.toGeoJSON();
-    lastGeometry   = geojson.geometry;
-
-    openClimateModal(lastGeometry);
-});
-
-
-/* ═══════════════════════════════════════════════════════════
-   ClimateSERV API  –  Submit → Poll → Fetch
-═══════════════════════════════════════════════════════════ */
-const CS_BASE = 'https://climateserv.servirglobal.net/api';
-
-// Fixed request parameters (swap geometry only)
-const CS_PARAMS = {
-    datatype:              0,
-    ensemble:              false,
-    ensemble_data_source:  '',
-    begintime:             '01/01/2020',
-    endtime:               '02/28/2020',
-    intervaltype:          0,
-    operationtype:         5,
-    dateType_Category:     'default',
-    isZip_CurrentDataType: false,
-    is_from_ui:            true,
-};
-
-let csModal        = null;  // Bootstrap modal instance
-let csActiveId     = null;  // current job ID
-let csAborted      = false; // flag to stop polling on modal close
-
-function openClimateModal(geometry) {
-    csAborted = false;
-
-    // Reset UI
-    $('#cs-progress-section').show();
-    $('#cs-error-section').hide();
-    $('#cs-chart-section').hide();
-    $('#cs-progress-bar').css('width', '0%');
-    $('#cs-progress-pct').text('0%');
-    $('#cs-status-text').text('Submitting data request\u2026');
-    $('#cs-request-id').text('');
-
-    if (!csModal) {
-        csModal = new bootstrap.Modal(document.getElementById('climateModal'));
-        // Stop polling if the modal is dismissed
-        document.getElementById('climateModal').addEventListener('hidden.bs.modal', () => {
-            csAborted = true;
-        });
-    }
-    csModal.show();
-
-    csSubmitRequest(geometry);
-}
-
-function csRetry() {
-    if (lastGeometry) openClimateModal(lastGeometry);
-}
-
-// ── 1. Submit ──────────────────────────────────────────────
-function csSubmitRequest(geometry) {
-    $.ajax({
-        url:      `${CS_BASE}/submitDataRequest/`,
-        method:   'GET',
-        dataType: 'json',
-        data:     Object.assign({}, CS_PARAMS, { geometry: JSON.stringify(geometry) }),
-    })
-    .done(function (response) {
-        if (csAborted) return;
-        const id = Array.isArray(response) ? response[0] : response;
-        csActiveId = id;
-        $('#cs-status-text').text('Request queued. Awaiting processing\u2026');
-        $('#cs-request-id').text(`ID: ${id}`);
-        csPollProgress(id);
-    })
-    .fail(function (xhr) {
-        csShowError('Submit failed: ' + (xhr.responseText || xhr.statusText || 'Network error'));
-    });
-}
-
-// ── 2. Poll progress ───────────────────────────────────────
-function csPollProgress(id) {
-    if (csAborted) return;
-
-    $.ajax({
-        url:      `${CS_BASE}/getDataRequestProgress/`,
-        method:   'GET',
-        dataType: 'json',
-        data:     { id },
-    })
-    .done(function (response) {
-        if (csAborted) return;
-
-        const raw      = Array.isArray(response) ? response[0] : response;
-        const progress = parseFloat(raw);
-
-        if (isNaN(progress) || progress < 0) {
-            csShowError('Processing failed on server (progress returned ' + raw + ').');
-            return;
-        }
-
-        const pct = Math.min(100, Math.round(progress));
-        $('#cs-progress-bar').css('width', pct + '%');
-        $('#cs-progress-pct').text(pct + '%');
-        $('#cs-status-text').text('Processing: ' + pct + '% complete\u2026');
-
-        if (progress >= 100) {
-            $('#cs-status-text').text('Fetching data\u2026');
-            csFetchData(id);
-        } else {
-            setTimeout(() => csPollProgress(id), 2000);
-        }
-    })
-    .fail(function (xhr) {
-        if (csAborted) return;
-        // Retry a few network hiccups silently
-        setTimeout(() => csPollProgress(id), 3000);
-    });
-}
-
-// ── 3. Fetch final data ────────────────────────────────────
-function csFetchData(id) {
-    $.ajax({
-        url:      `${CS_BASE}/getDataFromRequest/`,
-        method:   'GET',
-        dataType: 'json',
-        data:     { id },
-    })
-    .done(function (resultData) {
-        if (csAborted) return;
-        csProcessAndChart(resultData);
-    })
-    .fail(function (xhr) {
-        csShowError('Data fetch failed: ' + (xhr.responseText || xhr.statusText || 'Network error'));
-    });
-}
-
-// ── Error display ──────────────────────────────────────────
-function csShowError(msg) {
-    $('#cs-progress-section').hide();
-    $('#cs-chart-section').hide();
-    $('#cs-error-section').show();
-    $('#cs-error-msg').text(msg);
-}
-
-
-/* ═══════════════════════════════════════════════════════════
-   Data Processing & Chart.js Rendering
-═══════════════════════════════════════════════════════════ */
-let csChartInstance = null;
-
-function csProcessAndChart(resultData) {
-    const timeSeriesArray = resultData.data;
-    const noDataValue     = -9999;
-
-    if (!timeSeriesArray || timeSeriesArray.length === 0) {
-        csShowError('No data returned for the selected area and date range.');
-        return;
-    }
-
-    const values = timeSeriesArray.map(item => {
-        const val = parseFloat(item.value.avg);
-        return val === noDataValue ? null : val;
-    });
-
-    const dates = timeSeriesArray.map(item => {
-        const [m, d, y] = item.date.split('/');
-        return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-    });
-
-    // ── Stats ──────────────────────────────────────────────
-    const valid   = values.filter(v => v !== null);
-    const vMin    = valid.length ? Math.min(...valid) : null;
-    const vMax    = valid.length ? Math.max(...valid) : null;
-    const vMean   = valid.length ? (valid.reduce((s, v) => s + v, 0) / valid.length) : null;
-    const fmt     = v => v !== null ? v.toFixed(4) : 'N/A';
-
-    // ── Meta pills ─────────────────────────────────────────
-    $('#cs-meta-bar').html(`
-        <span class="cs-meta-pill">Period: <span>${CS_PARAMS.begintime} – ${CS_PARAMS.endtime}</span></span>
-        <span class="cs-meta-pill">Data points: <span>${valid.length}</span></span>
-        <span class="cs-meta-pill">Request ID: <span style="font-size:9px">${csActiveId}</span></span>
-    `);
-
-    // ── Stat cards ─────────────────────────────────────────
-    $('#cs-stats-row').html(`
-        <div class="cs-stat-card">
-            <div class="cs-stat-label">Minimum</div>
-            <div class="cs-stat-value">${fmt(vMin)}</div>
+                <ul id="layer-list"></ul>
+            </div>
         </div>
-        <div class="cs-stat-card">
-            <div class="cs-stat-label">Mean</div>
-            <div class="cs-stat-value">${fmt(vMean)}</div>
+
+        <!-- ── Timeline ── -->
+        <div id="timeline" role="region" aria-label="Timeline date controls">
+            <div class="tl-row1">
+                <button class="tl-btn" onclick="stepDate(-365)" title="Back 1 year" aria-label="Back 1 year">
+                    <i class="fas fa-backward-fast" aria-hidden="true"></i>
+                </button>
+                <button class="tl-btn" onclick="stepDate(-30)" title="Back 1 month" aria-label="Back 1 month">
+                    <i class="fas fa-backward-step" aria-hidden="true"></i>
+                </button>
+                <button class="tl-btn" onclick="stepDate(-1)" title="Back 1 day" aria-label="Back 1 day">
+                    <i class="fas fa-backward" aria-hidden="true"></i>
+                </button>
+                <button class="tl-btn" id="play-btn" onclick="togglePlay()" title="Play / Pause"
+                        aria-label="Play animation" aria-pressed="false">
+                    <i class="fas fa-play" aria-hidden="true"></i>
+                </button>
+                <button class="tl-btn" onclick="stepDate(1)" title="Forward 1 day" aria-label="Forward 1 day">
+                    <i class="fas fa-forward" aria-hidden="true"></i>
+                </button>
+                <button class="tl-btn" onclick="stepDate(30)" title="Forward 1 month" aria-label="Forward 1 month">
+                    <i class="fas fa-forward-step" aria-hidden="true"></i>
+                </button>
+                <button class="tl-btn" onclick="stepDate(365)" title="Forward 1 year" aria-label="Forward 1 year">
+                    <i class="fas fa-forward-fast" aria-hidden="true"></i>
+                </button>
+
+                <div id="current-date-display" aria-live="polite" aria-atomic="true">2024-08-21</div>
+                <label for="date-picker" class="sr-only">Select map date</label>
+                <input type="date" id="date-picker" value="2024-08-21"
+                       min="2015-01-01" max="2024-12-31" aria-label="Select map date">
+                <div class="tl-spacer"></div>
+                <label class="tl-speed-label" for="speed-select">
+                    SPEED
+                </label>
+                <select id="speed-select" aria-label="Animation playback speed">
+                    <option value="2000">0.5×</option>
+                    <option value="1000" selected>1×</option>
+                    <option value="500">2×</option>
+                    <option value="250">4×</option>
+                </select>
+            </div>
+            <div class="tl-row2">
+                <span class="tl-range-label" id="tl-range-start">Jan 2015</span>
+                <label for="timeline-slider" class="sr-only">Timeline position</label>
+                <input type="range" id="timeline-slider" min="0" max="3650" value="3519"
+                       aria-label="Timeline date position" aria-valuetext="2024-08-21">
+                <span class="tl-range-label" id="tl-range-end">Dec 2024</span>
+            </div>
         </div>
-        <div class="cs-stat-card">
-            <div class="cs-stat-label">Maximum</div>
-            <div class="cs-stat-value">${fmt(vMax)}</div>
-        </div>
-        <div class="cs-stat-card">
-            <div class="cs-stat-label">Points</div>
-            <div class="cs-stat-value">${valid.length}</div>
-        </div>
-    `);
 
-    // ── Destroy old chart ──────────────────────────────────
-    if (csChartInstance) { csChartInstance.destroy(); csChartInstance = null; }
+    </main><!-- /main#main-content -->
 
-    // ── Draw Chart ─────────────────────────────────────────
-    const ctx = document.getElementById('cs-chart-canvas').getContext('2d');
+    <!-- ── Scripts ── -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-    csChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels:   dates,
-            datasets: [{
-                label:            'Avg Value',
-                data:             values,
-                borderColor:      '#0170B9',
-                backgroundColor:  'rgba(1, 112, 185, 0.10)',
-                borderWidth:      2,
-                pointBackgroundColor: '#f64137',
-                pointBorderColor:     '#f64137',
-                pointRadius:      4,
-                pointHoverRadius: 7,
-                tension:          0.35,
-                fill:             true,
-                spanGaps:         true,
-            }],
-        },
-        options: {
-            responsive:          true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: {
-                    labels: { color: '#3a3a3a', font: { size: 12 }, boxWidth: 14 },
-                },
-                tooltip: {
-                    backgroundColor:  '#ffffff',
-                    borderColor:      '#dddddd',
-                    borderWidth:      1,
-                    titleColor:       '#0170B9',
-                    bodyColor:        '#3a3a3a',
-                    padding:          10,
-                    callbacks: {
-                        label: ctx => {
-                            const v = ctx.parsed.y;
-                            return v === null ? ' No data' : ` ${v.toFixed(4)}`;
-                        },
-                    },
-                },
-            },
-            scales: {
-                x: {
-                    ticks: {
-                        color:    '#58585b',
-                        font:     { size: 10 },
-                        maxRotation: 45,
-                        autoSkip: true,
-                        maxTicksLimit: 12,
-                    },
-                    grid: { color: 'rgba(221, 221, 221, 0.8)' },
-                },
-                y: {
-                    ticks: {
-                        color: '#58585b',
-                        font:  { size: 11 },
-                        callback: v => v.toFixed(3),
-                    },
-                    grid:  { color: 'rgba(221, 221, 221, 0.8)' },
-                    title: {
-                        display: true,
-                        text:    'Average Value',
-                        color:   '#58585b',
-                        font:    { size: 10 },
-                    },
-                },
-            },
-        },
-    });
+    <script>
+        /* Base path for API calls — empty in dev, set to the proxy prefix in production */
+        const SCRIPT_NAME = "{{ script_name }}";
 
-    // ── Switch view ────────────────────────────────────────
-    $('#cs-progress-section').hide();
-    $('#cs-error-section').hide();
-    $('#cs-chart-section').show();
-}
+    </script>
+    <script src="{% static 'js/sampler.js' %}"></script>
 
-
-/* ═══════════════════════════════════════════════════════════
-   Accessibility helpers – timeline slider valuetext
-═══════════════════════════════════════════════════════════ */
-$('#timeline-slider').on('input change', function () {
-    const d = sliderToDate(+this.value);
-    $(this).attr('aria-valuetext', toDisplayDate(d));
-});
-
-/* ═══════════════════════════════════════════════════════════
-   Accessibility helpers – Leaflet toolbar semantic roles
-   (patched post-render because Leaflet owns the DOM)
-═══════════════════════════════════════════════════════════ */
-function patchLeafletA11y() {
-    // Draw toolbars
-    document.querySelectorAll('.leaflet-draw-toolbar').forEach(function (toolbar) {
-        toolbar.setAttribute('role', 'group');
-        toolbar.setAttribute('aria-label',
-            toolbar.classList.contains('leaflet-draw-toolbar-top') ? 'Drawing tools' : 'Edit tools');
-        toolbar.querySelectorAll('a').forEach(function (link) {
-            if (!link.getAttribute('role')) link.setAttribute('role', 'button');
-        });
-    });
-    // Zoom control
-    var zoom = document.querySelector('.leaflet-control-zoom');
-    if (zoom) {
-        zoom.setAttribute('role', 'group');
-        zoom.setAttribute('aria-label', 'Zoom controls');
-    }
-    // Attribution — use role="note" (contentinfo must be top-level)
-    var attr = document.querySelector('.leaflet-control-attribution');
-    if (attr) {
-        attr.setAttribute('role', 'note');
-        attr.setAttribute('aria-label', 'Map attribution');
-    }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   Dynamic identifier height
-   Keeps --identifier-h in sync with the actual rendered height
-   of the usa-identifier footer so the map and timeline are
-   always positioned correctly, even if the links wrap.
-═══════════════════════════════════════════════════════════ */
-function syncIdentifierHeight() {
-    const el = document.querySelector('.usa-identifier');
-    if (!el) return;
-    const h = el.offsetHeight;
-    if (h > 0) {
-        document.documentElement.style.setProperty('--identifier-h', h + 'px');
-        map.invalidateSize();
-    }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   Boot
-═══════════════════════════════════════════════════════════ */
-initDataLayers();
-buildLayerUI();
-selectBasemap('bluemarble');   // safe here: leafletLayers is initialised above
-applyDate(currentDate);
-
-// Run after Leaflet has rendered its controls
-setTimeout(patchLeafletA11y, 200);
-
-// Sync identifier height once layout is stable, and on resize
-setTimeout(syncIdentifierHeight, 100);
-window.addEventListener('resize', syncIdentifierHeight);
-</script>
-
-{#</body>#}
-{#</html>#}
 {% endblock %}
 
 {% block footer-nav %}{% endblock %}
@@ -2215,40 +268,35 @@ window.addEventListener('resize', syncIdentifierHeight);
 {% endblock %}
 {% block final-footer %}
     <div class="usa-identifier hds-palette-black">
-               <nav class="usa-identifier__section usa-identifier__section--required-links" aria-label="Important links">
-            <div class="usa-identifier__container">
-                <ul class="usa-identifier__required-links-list">
-                    <li class="usa-identifier__required-links-item">
-                        <a href="https://www.nasa.gov/about/" class="usa-identifier__required-link usa-link">About
-                            NASA</a>
-                    </li>
-                    <li class="usa-identifier__required-links-item">
-                        <a href="https://www.nasa.gov/accessibility/" class="usa-identifier__required-link usa-link">Accessibility
-                            support</a>
-                    </li>
-                    <li class="usa-identifier__required-links-item">
-                        <a href="https://www.nasa.gov/foia/" class="usa-identifier__required-link usa-link">FOIA
-                            requests</a>
-                    </li>
-                    <li class="usa-identifier__required-links-item">
-                        <a href="https://www.nasa.gov/no-fear-act/" class="usa-identifier__required-link usa-link">No
-                            FEAR
-                            Act data</a>
-                    </li>
-                    <li class="usa-identifier__required-links-item">
-                        <a href="https://oig.nasa.gov" class="usa-identifier__required-link usa-link">Office of the
-                            Inspector General</a>
-                    </li>
-                    <li class="usa-identifier__required-links-item">
-                        <a href="https://www.nasa.gov/performance/" class="usa-identifier__required-link usa-link">Performance
-                            reports</a>
-                    </li>
-                    <li class="usa-identifier__required-links-item">
-                        <a href="https://www.nasa.gov/privacy/" class="usa-identifier__required-link usa-link">Privacy
-                            policy</a>
-                    </li>
-                </ul>
+        <div style="border-radius: 3px; padding: 0.75rem 1rem; font-size: 12px; line-height: 1.7; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 0.75rem 2rem;">
+            <div class="responsibility-info">
+                <div>
+                    <span>Last Updated: </span><a
+                        href="https://github.com/NASA-EarthRISE/earthrise-toolkit_webmap-sampler/commits/main"
+                        target="_blank" rel="noopener noreferrer" style="color: inherit;">
+                    <time datetime="2026-08-04" style="color: inherit;">August 5, 2026</time>
+                </a></div>
+                <div>
+                    <span>Page Editor: </span><a href="https://github.com/billyz313" target="_blank"
+                                                 rel="noopener noreferrer" style="color: inherit;">billyz313</a></div>
+                <div>
+                    <span>Responsible NASA Official: </span><a href="https://github.com/billyz313" target="_blank"
+                                                               rel="noopener noreferrer" style="color: inherit;">Billy Ashmall</a></div>
             </div>
-        </nav>
+            <nav aria-label="Required NASA footer links"
+                 style="display: flex; flex-wrap: wrap; gap: 0 1.25rem; align-self: center; line-height: 1.75;">
+                <a href="https://www.nasa.gov/about/" target="_blank" rel="noopener noreferrer" style="color: inherit;">About
+                    NASA</a>
+                <a href="https://www.nasa.gov/accessibility/" target="_blank" rel="noopener noreferrer"
+                   style="color: inherit;">Accessibility</a>
+                <a href="https://www.nasa.gov/foia/" target="_blank" rel="noopener noreferrer" style="color: inherit;">FOIA</a>
+                <a href="https://www.nasa.gov/no-fear-act/" target="_blank" rel="noopener noreferrer"
+                   style="color: inherit;">No FEAR Act</a>
+                <a href="https://www.nasa.gov/privacy/" target="_blank" rel="noopener noreferrer"
+                   style="color: inherit;">Privacy Policy</a>
+                <a href="https://www.nasa.gov/vulnerability-disclosure-policy/" target="_blank"
+                   rel="noopener noreferrer" style="color: inherit;">Vulnerability Disclosure Policy</a>
+            </nav>
+        </div>
     </div>
 {% endblock %}
