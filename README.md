@@ -114,3 +114,6 @@ Once your environment is set up and dependencies are installed:
 
 - Data provided by [NASA GIBS](https://earthdata.nasa.gov/eosdis/science-system-pt/gibs).
 - Analysis powered by [SERVIR ClimateSERV](https://climateserv.servirglobal.net/).
+
+This application is distributed by EarthRISE under the terms of the GPLv3 License. See
+[LICENSE](https://github.com/NASA-EarthRISE/earthrise-toolkit_webmap-sampler/blob/main/LICENSE) in this directory for more information.
