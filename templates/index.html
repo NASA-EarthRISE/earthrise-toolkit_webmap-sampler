@@ -26,7 +26,7 @@
             --shadow-menu: 0px 4px 10px -2px rgba(0, 0, 0, 0.1);
             --font-body: 'Public Sans', sans-serif;
             --font-heading: 'Inter', sans-serif;
-            --header-h: 118px;
+            --header-h: 200px; /* fallback — overridden at runtime by syncHeaderH() */
             --timeline-h: 90px;
             --identifier-h: 56px;
         }
@@ -38,8 +38,8 @@
 {#<body>#}
 
 {% block project-title %}
-    <img src="{% static '@nasa-hds/core/dist/assets/img/nasa-branding/nasa-logo.svg' %}" alt="NASA HDS Templates"
-         style="height:50px;"> Air Quality Sampler — Earth Observing System{% endblock %}
+    <img src="{% static 'images/map_sampler.png' %}" alt="Map Sampler logo"
+         style="height:50px;"> Map Sampler — Earth Observing System{% endblock %}
 
 {% block top-menu %}
 {% endblock %}
@@ -51,7 +51,7 @@
 
         <!-- ── Map ── -->
         <div id="map" role="application"
-             aria-label="Interactive air quality map. Use arrow keys to pan, plus and minus to zoom."></div>
+             aria-label="Interactive map. Use arrow keys to pan, plus and minus to zoom."></div>
 
         <!-- ── Loading Badge ── -->
         <div id="loading-badge" role="status" aria-live="polite" aria-atomic="true">
@@ -259,6 +259,48 @@
         const SCRIPT_NAME = "{{ script_name }}";
 
     </script>
+    <script>
+        /* Dynamically keep --header-h in sync with the actual rendered header height.
+           Sums the height of the NASA global nav and the USWDS app header independently,
+           so the result is correct even after global-nav.js makes the NASA nav
+           position:fixed (removing it from flow and causing .bottom-based measurements
+           to drop to just the USWDS header height). */
+        (function () {
+            function syncHeaderH() {
+                const headers = document.querySelectorAll('header');
+                let totalHeight = 0;
+
+                headers.forEach(header => {
+                    const rect = header.getBoundingClientRect();
+                    const style = window.getComputedStyle(header);
+
+                    // Account for any layout margins applied to the tags
+                    const marginTop = parseFloat(style.marginTop) || 0;
+                    const marginBottom = parseFloat(style.marginBottom) || 0;
+
+                    totalHeight += rect.height + marginTop + marginBottom;
+                });
+
+                if (totalHeight > 0) {
+                    document.documentElement.style.setProperty('--header-h', totalHeight + 'px');
+                }
+            }
+
+            // Measure at DOMContentLoaded — both headers are still in normal flow
+            // at this point, giving the correct combined height.
+            // Do NOT re-measure on 'load' or via ResizeObserver: by the time those
+            // fire, global-nav.js (deferred) has already run and may have altered
+            // the NASA nav height, producing a slightly wrong value.
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', syncHeaderH);
+            } else {
+                syncHeaderH();
+            }
+
+            // Re-measure only when the window is resized (layout breakpoints, zoom).
+            window.addEventListener('resize', syncHeaderH);
+        })();
+    </script>
     <script src="{% static 'js/sampler.js' %}"></script>
 
 {% endblock %}
@@ -281,7 +323,8 @@
                                                  rel="noopener noreferrer" style="color: inherit;">billyz313</a></div>
                 <div>
                     <span>Responsible NASA Official: </span><a href="https://github.com/billyz313" target="_blank"
-                                                               rel="noopener noreferrer" style="color: inherit;">Billy Ashmall</a></div>
+                                                               rel="noopener noreferrer" style="color: inherit;">Billy
+                    Ashmall</a></div>
             </div>
             <nav aria-label="Required NASA footer links"
                  style="display: flex; flex-wrap: wrap; gap: 0 1.25rem; align-self: center; line-height: 1.75;">

@@ -74,6 +74,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                # Injects nasa_nav_header, nasa_nav_css/js vars, and footer metadata
+                "air_quality_sampler.context_processors.site_metadata",
             ],
         },
     },
@@ -81,6 +83,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "air_quality_sampler.wsgi.application"
 
+
+# Cache — database-backed so all Gunicorn workers share one cache.
+# Run `python manage.py createcachetable` once after the first deploy.
+# The NASA global nav HTML is stored here with a 4-hour TTL.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "django_cache",
+    }
+}
+
+# Footer metadata — injected into every template via the context processor.
+RESPONSIBLE_NASA_OFFICIAL = config("RESPONSIBLE_NASA_OFFICIAL", default="TBD")
+SITE_EDITOR = config("SITE_EDITOR", default="TBD")
+SITE_LAST_UPDATED = config("SITE_LAST_UPDATED", default="")
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases

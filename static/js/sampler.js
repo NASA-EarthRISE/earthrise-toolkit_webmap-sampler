@@ -153,6 +153,9 @@ const map = L.map('map', {
     zoomControl: false,
 });
 
+// Start with the contiguous US in view
+map.fitBounds([[24.396308, -124.848974], [49.384358, -66.885444]]);
+
 L.control.zoom({position: 'bottomright'}).addTo(map);
 
 /* ═══════════════════════════════════════════════════════════
