@@ -1,0 +1,26 @@
+[Unit]
+Description=webmap-sampler daemon
+After=network.target
+
+[Service]
+User=nginx
+Group=nginx
+WorkingDirectory=/earthrise_apps/earthrise-toolkit_webmap-sampler/map_sampler
+ExecStart=/opt/anaconda3/envs/webmap-sampler/bin/gunicorn \
+    --worker-class gevent \
+    --workers 3 \
+    --timeout 600 \
+    --backlog 100 \
+    --keep-alive 5 \
+    --worker-connections 1000 \
+    --pythonpath '/earthrise_apps/earthrise-toolkit_webmap-sampler,/opt/anaconda3/envs/webmap-sampler/lib/python3.13/site-packages' \
+    --bind unix:/earthrise_apps/socks/webmap-sampler.sock \
+    map_sampler.wsgi:application
+
+# Logging
+StandardOutput=append:/var/log/webmap-sampler.log
+StandardError=append:/var/log/webmap-sampler.log
+
+
+[Install]
+WantedBy=multi-user.target
