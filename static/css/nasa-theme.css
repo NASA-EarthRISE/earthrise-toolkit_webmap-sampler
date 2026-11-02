@@ -1,0 +1,586 @@
+/**
+ * NASA USWDS Design System → Bootstrap 5 Mapping
+ * Based on USWDS v2.13.3
+ *
+ * This stylesheet maps NASA's official USWDS styles to Bootstrap 5,
+ * allowing you to use Bootstrap's functionality with NASA's visual design.
+ */
+
+/* ============================================
+   NASA Design Tokens
+   ============================================ */
+:root {
+    /* NASA Brand Colors */
+    --carbon-black: #000000;
+    --spacesuit-white: #FFFFFF;
+    --nasa-red: #F64137;
+    --nasa-blue: #1C67E3;
+
+    /* Carbon Grayscale System */
+    --carbon-90: #17171B;
+    --carbon-80: #2E2E32;
+    --carbon-70: #444447;
+    --carbon-60: #58585B;
+    --carbon-50: #717173;
+    --carbon-40: #959599;
+    --carbon-30: #B9B9BB;
+    --carbon-20: #D1D1D1;
+    --carbon-10: #E3E3E3;
+    --carbon-05: #F6F6F6;
+
+    /* NASA Blue Variants */
+    --nasa-blue-tint: #288BFF;
+    --nasa-blue-shade: #0B3D91;
+    --nasa-blue-hover: #1A4480;
+    --nasa-blue-active: #162E51;
+
+    /* NASA Red Variants */
+    --nasa-red-tint: #FF5C52;
+    --nasa-red-shade: #B60109;
+    --nasa-red-hover: #B50909;
+    --nasa-red-active: #8B0A03;
+
+    /* USWDS Colors */
+    --uswds-primary: #005EA2;
+    --uswds-primary-hover: #1A4480;
+    --uswds-primary-active: #162E51;
+    --uswds-secondary: #D83933;
+    --uswds-text: #1B1B1B;
+    --uswds-border: #565C65;
+    --uswds-disabled: #C9C9C9;
+    --uswds-visited: #54278F;
+    --uswds-focus: #2491FF;
+
+       /* Earth Science Colors */
+    --earth-blue: #0066CC;
+    --earth-green: #88B04B;
+    --earth-brown: #8B4513;
+    --sky-blue: #87CEEB;
+    --ocean-blue: #006994;
+    --forest-green: #228B22;
+
+    /* Accent Colors */
+    --international-orange: #EA6F24;
+    --active-green: #47DA84;
+    --table-accent: #97D4EA;
+    --table-active: #E1F3F8;
+
+    /* Typography */
+    --nasa-font-family: 'Public Sans Web', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    --nasa-font-size-base: 1.38rem;  /* 22.08px if base is 16px */
+    --nasa-line-height: 1.8;
+
+    /* Spacing Scale (USWDS uses rem units) */
+    --spacing-05: 0.125rem;   /* 2px */
+    --spacing-1: 0.25rem;     /* 4px */
+    --spacing-2: 0.5rem;      /* 8px */
+    --spacing-3: 0.75rem;     /* 12px */
+    --spacing-4: 1rem;        /* 16px */
+    --spacing-5: 1.25rem;     /* 20px */
+    --spacing-6: 1.5rem;      /* 24px */
+    --spacing-7: 2rem;        /* 32px */
+    --spacing-8: 2.5rem;      /* 40px */
+
+    /* Container Widths */
+    --container-width: 64rem;           /* 1024px */
+    --container-widescreen: 87.5rem;    /* 1400px */
+
+    /* Breakpoints (USWDS) */
+    --mobile-lg: 30em;      /* 480px */
+    --tablet: 40em;         /* 640px */
+    --desktop: 64em;        /* 1024px */
+    --desktop-lg: 75em;     /* 1200px */
+    --widescreen: 87.5em;   /* 1400px */
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+    /* Border Radius */
+    --radius-sm: 0.125rem;
+    --radius-md: 0.25rem;
+    --radius-lg: 0.5rem;
+
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 3rem;
+
+      /* Grays */
+    --gray-100: #f8f9fa;
+    --gray-200: #e9ecef;
+    --gray-300: #dee2e6;
+    --gray-400: #ced4da;
+    --gray-500: #adb5bd;
+    --gray-600: #6c757d;
+    --gray-700: #495057;
+    --gray-800: #343a40;
+    --gray-900: #212529;
+}
+
+/* ============================================
+   GLOBAL OVERRIDES
+   ============================================ */
+body {
+    color: var(--uswds-text);
+    background-color: var(--spacesuit-white);
+    font-family: var(--nasa-font-family);
+    font-size: 1.06rem; /* Slightly larger than Bootstrap default */
+    line-height: 1.6;
+}
+
+.small, small {
+    font-size: .875rem;
+}
+
+/* Override Bootstrap container to match USWDS */
+.container,
+.grid-container {
+    max-width: var(--container-width);
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (min-width: 64em) {
+    .container,
+    .grid-container {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+
+.container-widescreen,
+.grid-container-widescreen {
+    max-width: var(--container-widescreen);
+}
+
+/* Add USWDS container classes as aliases */
+.grid-container-extrawide {
+    max-width: 100%;
+}
+
+/* ============================================
+   BOOTSTRAP GRID → USWDS GRID MAPPING
+   ============================================ */
+
+/* Map Bootstrap .row to USWDS .grid-row */
+.grid-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+}
+
+.grid-row > * {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* USWDS Grid Gaps (Bootstrap doesn't have exact equivalents) */
+.grid-gap { /* Default gap */
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+}
+
+.grid-gap > * {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+@media (min-width: 64em) {
+    .grid-gap {
+        margin-left: -1rem;
+        margin-right: -1rem;
+    }
+    .grid-gap > * {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* Grid gap utilities */
+.grid-gap-0 > * { padding-left: 0; padding-right: 0; }
+.grid-gap-1 > * { padding-left: 0.25rem; padding-right: 0.25rem; }
+.grid-gap-2 > * { padding-left: 0.5rem; padding-right: 0.5rem; }
+.grid-gap-3 > * { padding-left: 0.75rem; padding-right: 0.75rem; }
+.grid-gap-4 > * { padding-left: 1rem; padding-right: 1rem; }
+.grid-gap-5 > * { padding-left: 1.25rem; padding-right: 1.25rem; }
+.grid-gap-6 > * { padding-left: 1.5rem; padding-right: 1.5rem; }
+
+/* Map Bootstrap columns to USWDS */
+.grid-col { flex: 1 1 0%; width: auto; max-width: 100%; min-width: 1px; }
+.grid-col-1 { flex: 0 0 auto; width: 8.333333%; }
+.grid-col-2 { flex: 0 0 auto; width: 16.666667%; }
+.grid-col-3 { flex: 0 0 auto; width: 25%; }
+.grid-col-4 { flex: 0 0 auto; width: 33.333333%; }
+.grid-col-5 { flex: 0 0 auto; width: 41.666667%; }
+.grid-col-6 { flex: 0 0 auto; width: 50%; }
+.grid-col-7 { flex: 0 0 auto; width: 58.333333%; }
+.grid-col-8 { flex: 0 0 auto; width: 66.666667%; }
+.grid-col-9 { flex: 0 0 auto; width: 75%; }
+.grid-col-10 { flex: 0 0 auto; width: 83.333333%; }
+.grid-col-11 { flex: 0 0 auto; width: 91.666667%; }
+.grid-col-12 { flex: 0 0 auto; width: 100%; }
+.grid-col-auto { flex: 0 0 auto; width: auto; }
+
+.heading-22, h1.heading-22, h2.heading-22, h3.heading-22, h4.heading-22, h5.heading-22, h6.heading-22, p.heading-22 {
+    font-size: 1.375rem;
+    margin-block-start: 1em!important;
+    margin-block-end: 1em!important;
+    margin-inline-start: 0;
+    margin-inline-end: 0;
+}
+
+.line-height-md, .line-height-md *, .line-height-md div, .line-height-md h1, .line-height-md h2, .line-height-md h3, .line-height-md h4, .line-height-md h5, .line-height-md h6, .line-height-md p, h1.line-height-md, h2.line-height-md, h3.line-height-md, h4.line-height-md, h5.line-height-md, h6.line-height-md, p.line-height-md {
+    line-height: 1.25;
+}
+
+/* ============================================
+   BOOTSTRAP BUTTONS → NASA BUTTONS
+   ============================================ */
+
+/* Override Bootstrap primary button with NASA style */
+.btn-primary,
+.usa-button {
+    font-family: var(--nasa-font-family);
+    font-size: 1.06rem;
+    line-height: 1;
+    font-weight: 700;
+    color: var(--spacesuit-white);
+    background-color: var(--uswds-primary);
+    border: 0;
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1.25rem;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-block;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover,
+.usa-button:hover {
+    color: var(--spacesuit-white);
+    background-color: var(--uswds-primary-hover);
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:active,
+.usa-button:active {
+    color: var(--spacesuit-white);
+    background-color: var(--uswds-primary-active);
+}
+
+.btn-primary:focus,
+.usa-button:focus {
+    outline: 0.25rem solid var(--uswds-focus);
+    outline-offset: 0.25rem;
+    box-shadow: none;
+}
+
+.btn-primary:disabled,
+.usa-button:disabled {
+    background-color: var(--uswds-disabled);
+    color: var(--spacesuit-white);
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* NASA Red Button (Secondary) */
+.btn-nasa-red,
+.btn-danger,
+.usa-button--secondary {
+    background-color: var(--uswds-secondary);
+    color: var(--spacesuit-white);
+}
+
+.btn-nasa-red:hover,
+.btn-danger:hover,
+.usa-button--secondary:hover {
+    background-color: var(--nasa-red-hover);
+    color: var(--spacesuit-white);
+}
+
+.btn-nasa-red:active,
+.usa-button--secondary:active {
+    background-color: var(--nasa-red-active);
+}
+
+/* NASA Blue Button (Official Brand) */
+.btn-nasa-blue {
+    background: linear-gradient(135deg, var(--nasa-blue-shade) 0%, var(--nasa-blue) 100%);
+    color: var(--spacesuit-white);
+    border: none;
+    font-weight: 600;
+}
+
+.btn-nasa-blue:hover {
+    background: linear-gradient(135deg, var(--nasa-blue) 0%, var(--nasa-blue-tint) 100%);
+    color: var(--spacesuit-white);
+}
+
+/* Unstyled Button (Link style) */
+.btn-link,
+.usa-button--unstyled {
+    color: var(--uswds-primary);
+    background-color: transparent;
+    border: 0;
+    font-weight: 400;
+    text-decoration: underline;
+    padding: 0;
+    box-shadow: none;
+}
+
+.btn-link:hover,
+.usa-button--unstyled:hover {
+    color: var(--uswds-primary-hover);
+    background-color: transparent;
+}
+
+/* ============================================
+   BOOTSTRAP FORMS → NASA FORMS
+   ============================================ */
+
+.form-control,
+.usa-input {
+    font-family: var(--nasa-font-family);
+    font-size: 1.06rem;
+    line-height: 1.4;
+    border: 1px solid var(--uswds-border);
+    border-radius: 0; /* USWDS uses square corners */
+    color: var(--uswds-text);
+    padding: 0.5rem;
+    height: 2.5rem;
+    max-width: 30rem;
+}
+
+.form-control:focus,
+.usa-input:focus {
+    border-color: var(--uswds-primary);
+    outline: 0.25rem solid var(--uswds-focus);
+    outline-offset: 0;
+    box-shadow: none;
+}
+
+.form-select {
+    border: 1px solid var(--uswds-border);
+    border-radius: 0;
+    background-position: right 0.5rem center;
+}
+
+.form-label {
+    font-weight: 700;
+    color: var(--uswds-text);
+    margin-bottom: 0.5rem;
+}
+
+/* ============================================
+   BOOTSTRAP CARDS → NASA CARDS
+   ============================================ */
+
+.card {
+    border: 1px solid var(--carbon-20);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--carbon-05) 0%, var(--carbon-10) 100%);
+    border-bottom: 2px solid var(--nasa-blue-shade);
+    font-weight: 600;
+    color: var(--nasa-blue-shade);
+    padding: 1rem 1.25rem;
+}
+
+.card-nasa {
+    border-left: 4px solid var(--nasa-blue-shade);
+}
+
+.card-earth {
+    border-left: 4px solid var(--earth-blue);
+}
+
+/* ============================================
+   BOOTSTRAP TABLES → NASA TABLES
+   ============================================ */
+
+.table {
+    font-family: var(--nasa-font-family);
+    border-collapse: collapse;
+    color: var(--uswds-text);
+}
+
+.table thead th {
+    background-color: var(--carbon-10);
+    color: var(--uswds-text);
+    font-weight: 700;
+    border-bottom: 2px solid var(--uswds-text);
+    padding: 0.5rem 1rem;
+}
+
+.table tbody td,
+.table tbody th {
+    border: 1px solid var(--uswds-text);
+    padding: 0.5rem 1rem;
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--carbon-05);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Compact table */
+.table-sm td,
+.table-sm th {
+    padding: 0.25rem 0.75rem;
+}
+
+/* Borderless table */
+.table-borderless thead th {
+    background-color: transparent;
+    border-top: 0;
+}
+
+.table-borderless td,
+.table-borderless th {
+    border-left: 0;
+    border-right: 0;
+}
+
+/* ============================================
+   BOOTSTRAP ALERTS → NASA ALERTS
+   ============================================ */
+
+.alert {
+    border-radius: var(--radius-md);
+    border-left: 4px solid;
+    padding: 1rem 1.25rem;
+}
+
+.alert-info {
+    background-color: #E7F6F8;
+    border-left-color: var(--uswds-primary);
+    color: var(--uswds-primary-active);
+}
+
+.alert-success {
+    background-color: #EBF9EE;
+    border-left-color: var(--active-green);
+    color: #1E6F42;
+}
+
+.alert-warning {
+    background-color: #FFF4E5;
+    border-left-color: var(--international-orange);
+    color: #936F38;
+}
+
+.alert-danger {
+    background-color: #F9E8E7;
+    border-left-color: var(--nasa-red);
+    color: var(--nasa-red-shade);
+}
+
+.alert-nasa {
+    background-color: #E3F2FD;
+    border-left-color: var(--nasa-blue-shade);
+    color: var(--nasa-blue-shade);
+}
+
+/* ============================================
+   BOOTSTRAP BADGES → NASA BADGES
+   ============================================ */
+
+.badge {
+    font-weight: 600;
+    padding: 0.35em 0.65em;
+    border-radius: var(--radius-lg);
+}
+
+.badge-nasa,
+.badge-primary {
+    background-color: var(--nasa-blue-shade);
+    color: var(--spacesuit-white);
+}
+
+.badge-nasa-red {
+    background-color: var(--nasa-red);
+    color: var(--spacesuit-white);
+}
+
+.badge-earth {
+    background-color: var(--earth-blue);
+    color: var(--spacesuit-white);
+}
+
+.badge-active {
+    background-color: var(--active-green);
+    color: var(--uswds-text);
+}
+
+/* ============================================
+   NASA UTILITY CLASSES
+   ============================================ */
+
+/* Background Colors */
+.bg-carbon-black { background-color: var(--carbon-black) !important; }
+.bg-carbon-90 { background-color: var(--carbon-90) !important; }
+.bg-carbon-80 { background-color: var(--carbon-80) !important; }
+.bg-carbon-70 { background-color: var(--carbon-70) !important; }
+.bg-carbon-60 { background-color: var(--carbon-60) !important; }
+.bg-carbon-50 { background-color: var(--carbon-50) !important; }
+.bg-carbon-40 { background-color: var(--carbon-40) !important; }
+.bg-carbon-30 { background-color: var(--carbon-30) !important; }
+.bg-carbon-20 { background-color: var(--carbon-20) !important; }
+.bg-carbon-10 { background-color: var(--carbon-10) !important; }
+.bg-carbon-05 { background-color: var(--carbon-05) !important;}
+
+
+/* font colors */
+.usa-footer {
+    font-family: Public Sans Web, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
+    font-size: 1.38rem;
+    line-height: 1.8;
+    overflow: hidden;
+}
+.hds-footer-menu {
+    font-size: .9rem;
+    line-height: 1.2em;
+    font-weight: 400;
+}
+.bg-carbon-black-important {
+    background-color: #000 !important;
+}
+.color-spacesuit-white, .color-spacesuit-white a, .color-spacesuit-white div, .color-spacesuit-white p, .color-spacesuit-white span, .color-spacesuit-white svg, div.color-spacesuit-white, p.color-spacesuit-white {
+    color: #fff;
+    fill: #fff;
+}
+.color-carbon-30-important, .color-carbon-30-important a, .color-carbon-30-important div, .color-carbon-30-important p, .color-carbon-30-important span, .color-carbon-30-important svg, div.color-carbon-30-important, p.color-carbon-30-important {
+    color: #b9b9bb !important;
+    fill: #b9b9bb !important;
+}
+.hds-footer-menu>li>a:hover {
+    text-decoration: underline !important;
+    text-decoration-style: dashed !important;
+    text-underline-offset: .3em;
+}
+
+.color-carbon-30, .color-carbon-30 a, .color-carbon-30 div, .color-carbon-30 p, .color-carbon-30 span, .color-carbon-30 svg, div.color-carbon-30, p.color-carbon-30 {
+    color: #b9b9bb;
+    fill: #b9b9bb;
+}
