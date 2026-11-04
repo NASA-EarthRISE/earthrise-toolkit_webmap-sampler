@@ -52,4 +52,3 @@ Thumbs.db
 sample_nginx.conf
 node_modules/
 package-lock.json
-package.json
